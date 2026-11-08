@@ -186,7 +186,7 @@ class OpenAICompatibleLLM:
             if not isinstance(content, str) or not content.strip():
                 raise ValueError("Empty LLM response")
             return ModelOutput(content=content[:1000])
-        except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
             raise VoiceError("LLM provider unavailable or returned invalid data", 502) from exc
 
 

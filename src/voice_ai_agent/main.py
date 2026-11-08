@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -79,10 +79,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/turn", response_model=TurnResponse)
     async def audio_turn(
-        audio: UploadFile = File(...),
-        session_id: str | None = Form(default=None),
-        request_id: str | None = Form(default=None),
-        language: Literal["en", "pt", "es"] = Form(default="en"),
+        audio: Annotated[UploadFile, File()],
+        session_id: Annotated[str | None, Form()] = None,
+        request_id: Annotated[str | None, Form()] = None,
+        language: Annotated[Literal["en", "pt", "es"], Form()] = "en",
     ) -> TurnResponse:
         try:
             return await pipeline.process(session_id, request_id, language, audio=audio)

@@ -167,7 +167,7 @@ TOOL_SPECS: list[dict[str, object]] = [
         "type": "function",
         "function": {
             "name": "get_session_summary",
-            "description": "Summarize recent interactions in this session, without inventing past context",
+            "description": "Summarize recent user interactions without inventing context",
             "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
         },
     },

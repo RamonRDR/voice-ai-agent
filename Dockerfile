@@ -11,7 +11,7 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src/ ./src/
 RUN python -m pip install --no-cache-dir .
-RUN useradd --create-home --uid 10001 voice
+RUN useradd --create-home --uid 10001 --gid voice voice
 USER voice
 EXPOSE 8000
 CMD ["uvicorn", "voice_ai_agent.main:app", "--host", "0.0.0.0", "--port", "8000"]

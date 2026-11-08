@@ -2,9 +2,8 @@
 
 import uuid
 
-from fastapi.testclient import TestClient
-
 from conftest import make_wav
+from fastapi.testclient import TestClient
 
 
 def new_session(client: TestClient) -> str:
@@ -71,7 +70,10 @@ def test_duplicate_request_rejected(client: TestClient) -> None:
 def test_validation_and_cross_session(client: TestClient) -> None:
     assert client.post("/api/turn/text", json={"text": ""}).status_code == 422
     assert client.post("/api/turn/text", json={"text": "hi", "language": "fr"}).status_code == 422
-    assert client.post("/api/turn/text", json={"text": "hi", "session_id": "invalid"}).status_code == 422
+    assert (
+        client.post("/api/turn/text", json={"text": "hi", "session_id": "invalid"}).status_code
+        == 422
+    )
     assert client.get("/api/history/" + str(uuid.uuid4())).status_code == 404
     assert client.post("/api/cancel/" + str(uuid.uuid4()) + "?session_id=invalid").json() == {
         "cancelled": False
