@@ -7,9 +7,9 @@ from typing import Literal
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 
 from .config import Settings, get_settings
 from .errors import VoiceError
@@ -44,7 +44,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
     @app.exception_handler(RequestValidationError)
-    async def validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
+    async def validation_error(_request: Request, _exc: RequestValidationError) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": "Invalid request parameters"})
 
     @app.get("/")
@@ -54,6 +54,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/health")
     async def health() -> dict[str, str]:
         return {"status": "ok", "version": "0.1.0"}
+
+    @app.post("/api/session")
+    async def new_session() -> dict[str, str]:
+        session_id, _session = await pipeline.store.get(None)
+        return {"session_id": session_id}
 
     @app.get("/api/config", response_model=RuntimeInfo)
     async def config() -> RuntimeInfo:

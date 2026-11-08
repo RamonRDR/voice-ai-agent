@@ -1,7 +1,6 @@
 """Validated, size-capped upload conversion to PCM 16-bit mono WAV."""
 
 import array
-import asyncio
 import io
 import math
 import wave
@@ -43,7 +42,6 @@ def verify_wav(data: bytes, max_seconds: int) -> None:
             samples.frombytes(frames)
             if not samples:
                 raise VoiceError("Audio is empty")
-            # RMS with a bounded sample to avoid unbounded work on malformed headers.
             stride = max(1, len(samples) // 100_000)
             sampled = samples[::stride]
             rms = math.sqrt(sum(s * s for s in sampled) / len(sampled))
@@ -63,7 +61,6 @@ async def prepare_audio(upload: UploadFile, settings: Settings, directory: Path)
     source = directory / ("input." + kind)
     target = directory / "normalized.wav"
     source.write_bytes(data)
-    # Fast path for correct WAV avoids ffmpeg dependency for fixtures.
     if kind == "wav":
         try:
             with wave.open(io.BytesIO(data), "rb") as w:
@@ -80,7 +77,6 @@ async def prepare_audio(upload: UploadFile, settings: Settings, directory: Path)
             target.write_bytes(data)
             return target
     try:
-        # Constant argument vector. Never interpolate filename into a shell command.
         await run_command(
             [
                 settings.ffmpeg_executable, "-hide_banner", "-loglevel", "error",

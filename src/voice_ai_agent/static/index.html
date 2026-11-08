@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Voice AI Agent | Local voice lab</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; background:#0a111c; color:#e9eef8; }
+    * { box-sizing:border-box } body { margin:0; min-height:100vh; background:radial-gradient(ellipse at 80% -20%,#19344e 0,transparent 55%),#0a111c }
+    main { max-width:980px; margin:auto; padding:clamp(20px,5vw,60px) 18px }
+    header { display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:34px }
+    .brand { font-weight:800; letter-spacing:-.045em; font-size:25px } .brand span { color:#71e2be }
+    .badge { padding:7px 12px; border:1px solid #43636c; border-radius:40px; font-size:12px; color:#9edcce }
+    .eyebrow { color:#78e1bf; text-transform:uppercase; font-size:12px; letter-spacing:.2em; font-weight:700 }
+    h1 { font-size:clamp(34px,6vw,62px); margin:8px 0 12px; line-height:1.08; letter-spacing:-.055em }
+    .intro { color:#a6b5c8; max-width:660px; line-height:1.7 }
+    .grid { display:grid; grid-template-columns:1.1fr .9fr; gap:20px; margin:30px 0 }
+    .panel { background:#101d2c; border:1px solid #26384b; border-radius:22px; padding:23px; box-shadow:0 15px 40px #0002 }
+    h2 { font-size:16px; margin:0 0 18px; letter-spacing:-.02em }
+    label { display:block; color:#b8c7d7; font-size:13px; margin:10px 0 8px }
+    select,input,textarea { width:100%; border:1px solid #34475b; background:#0a1726; color:#f1f5fa; border-radius:10px; padding:12px; font:inherit; }
+    textarea { resize:vertical; min-height:88px }
+    button { cursor:pointer; background:#70e5ba; border:1px solid #70e5ba; color:#09241f; border-radius:11px; padding:12px 16px; font-weight:700; font:inherit; transition:filter .15s; }
+    button:hover:not(:disabled) { filter:brightness(1.1) } button:disabled { opacity:.45; cursor:not-allowed }
+    button.secondary { color:#e9eef8; border-color:#34475b; background:#192b3b }
+    button.danger { color:#ffa3ac; background:#332128; border-color:#75424a }
+    .buttons { display:flex; gap:9px; flex-wrap:wrap; margin:20px 0 }
+    .notice { background:#102d38; border-left:3px solid #71e2be; padding:12px 13px; line-height:1.55; color:#bfecdf; font-size:13px; border-radius:5px }
+    .hint { color:#98abbf; font-size:12px; line-height:1.55 }
+    #status { font-size:13px; color:#95b7c4; min-height:20px } #status.error { color:#ff959e }
+    .message { border:1px solid #263d51; background:#0b1a29; border-radius:13px; padding:14px; margin:10px 0; overflow-wrap:anywhere }
+    .message .who { font-size:11px; font-weight:700; color:#75dbbb; text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px }
+    .message.user .who { color:#9eb6fe }
+    .message p { margin:4px 0; white-space:pre-wrap; line-height:1.5 }
+    #conversation { max-height:450px; overflow:auto }
+    .metrics { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:#9facbe; margin-top:18px; font-variant-numeric:tabular-nums }
+    .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0) }
+    footer { text-align:center; color:#6c879c; font-size:12px; margin:30px 0 }
+    @media(max-width:740px) { .grid { grid-template-columns:1fr } .panel { padding:19px } }
+    @media(prefers-reduced-motion:reduce) { * { transition:none !important } }
+  </style>
+</head>
+<body>
+<main>
+  <header><div class="brand">VOICE<span> LAB</span> <span aria-hidden="true">◉</span></div><div id="mode" class="badge">Loading configuration…</div></header>
+  <section aria-labelledby="hero-title">
+    <div class="eyebrow">Conversational intelligence / Python + FastAPI</div>
+    <h1 id="hero-title">Talk. Think.<br>Take action.</h1>
+    <p class="intro">A turn-based voice agent lab with validated speech input, clearly labeled model modes, real local tools, and optional synthesized replies. No hidden paid API calls.</p>
+  </section>
+  <div class="grid">
+    <section class="panel" aria-labelledby="input-title">
+      <h2 id="input-title">01 / Input</h2>
+      <p class="notice" id="disclaimer" role="status">Checking providers…</p>
+      <label for="language">Conversation language</label>
+      <select id="language"><option value="en">English</option><option value="pt">Português (Brasil)</option><option value="es">Español</option></select>
+      <div class="buttons">
+        <button id="record" type="button">● Record</button>
+        <button id="stop" class="secondary" type="button" disabled>■ Stop</button>
+        <button id="cancel" class="danger" type="button" disabled>Cancel</button>
+      </div>
+      <label for="upload">Or upload an audio file (WAV, WebM, OGG, MP3, M4A, up to 8 MB)</label>
+      <input id="upload" type="file" accept="audio/*,.wav,.webm,.ogg,.mp3,.m4a">
+      <p class="hint">The microphone is requested only when you press Record. Audio is processed per request, then deleted from temporary storage.</p>
+      <label for="typed">Or test tool calling with text</label>
+      <textarea id="typed" placeholder="Try: What time is it? | calculate 12*4 | note: buy milk"></textarea>
+      <div class="buttons"><button id="send" type="button">Send text</button><button id="send-file" class="secondary" type="button">Process audio file</button></div>
+      <p id="status" aria-live="polite">Ready.</p>
+    </section>
+    <section class="panel" aria-labelledby="conversation-title">
+      <h2 id="conversation-title">02 / Conversation</h2>
+      <div id="conversation" role="log" aria-live="polite" aria-relevant="additions text"><p class="hint">Your conversation appears here. No transcript is stored between page loads.</p></div>
+      <div class="buttons">
+        <button id="play" type="button" class="secondary" disabled>▶ Play latest reply</button>
+        <button id="clear" type="button" class="secondary">New session</button>
+      </div>
+      <audio id="player" controls hidden></audio>
+      <p id="tool" class="hint" aria-live="polite"></p>
+      <div class="metrics" id="metrics" aria-label="Processing timings"></div>
+    </section>
+  </div>
+  <footer>MIT licensed · Local first · Demo responses are labeled, not passed off as an LLM.</footer>
+</main>
+<script>
+"use strict";
+const el = id => document.getElementById(id);
+let session = null, request = null, controller = null, recorder = null;
+let stream = null, chunks = [], latest = null, latestLanguage = "en";
+const setStatus = (message, error=false) => { el("status").textContent=message; el("status").classList.toggle("error",error); };
+const busy = active => {
+  el("send").disabled=active; el("send-file").disabled=active; el("record").disabled=active;
+  el("cancel").disabled=!active; el("clear").disabled=active;
+};
+function showMessage(who, content) {
+  const container=el("conversation");
+  if (container.querySelector(".hint")) container.replaceChildren();
+  const message=document.createElement("div");
+  message.className="message "+who;
+  const name=document.createElement("div"); name.className="who"; name.textContent=who;
+  const p=document.createElement("p"); p.textContent=content;
+  message.append(name,p); container.append(message); container.scrollTop=container.scrollHeight;
+}
+async function freshSession() {
+  const response=await fetch("/api/session",{method:"POST"});
+  if (!response.ok) throw Error("Could not start a session");
+  session=(await response.json()).session_id;
+  el("conversation").replaceChildren();
+  el("metrics").textContent=""; el("tool").textContent="";
+  el("player").hidden=true; el("play").disabled=true; latest=null;
+  setStatus("New private in-memory session created.");
+}
+async function initialize() {
+  try {
+    const config=await (await fetch("/api/config")).json();
+    el("mode").textContent=config.mode.toUpperCase()+" · STT "+config.stt+" · LLM "+config.llm;
+    el("disclaimer").textContent=config.disclaimer +
+      (config.tts==="browser" ? " Audio output uses your browser's speech synthesis when you click Play." : " Audio output uses local eSpeak.");
+    await freshSession();
+  } catch (_error) { setStatus("Cannot connect to local API.",true); }
+}
+async function submit({blob, text}) {
+  if (!session) { setStatus("Session unavailable; reload the page.",true); return; }
+  request=crypto.randomUUID(); controller=new AbortController(); busy(true);
+  el("play").disabled=true; const language=el("language").value;
+  latestLanguage=language;
+  setStatus(blob ? "Validating audio → transcribing → processing…" : "Processing text and tools…");
+  try {
+    let response;
+    if (blob) {
+      const form=new FormData();
+      form.append("audio",blob,"recording."+(
+        blob.type.includes("ogg")?"ogg":blob.type.includes("wav")?"wav":"webm"
+      ));
+      form.append("session_id",session); form.append("request_id",request);
+      form.append("language",language);
+      response=await fetch("/api/turn",{method:"POST",body:form,signal:controller.signal});
+    } else {
+      response=await fetch("/api/turn/text",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({text,session_id:session,request_id:request,language}),
+        signal:controller.signal
+      });
+    }
+    const result=await response.json();
+    if (!response.ok) throw Error(typeof result.detail==="string" ? result.detail : "Request failed");
+    showMessage("user",result.transcript.text + (result.transcript.simulated?" [scripted STT demo]":""));
+    showMessage("assistant",result.response);
+    latest=result;
+    el("play").disabled=false;
+    el("tool").textContent=result.tool ? "Tool executed: "+result.tool.name+" (real local operation)" : "No tool called.";
+    const m=result.metrics;
+    el("metrics").textContent="STT "+m.stt_ms+" ms · Logic "+m.llm_ms+
+      " ms · Tools "+m.tools_ms+" ms · TTS "+m.tts_ms+" ms · Total "+m.total_ms+" ms";
+    setStatus(result.tts_error || "Completed. Select Play for speech output.", Boolean(result.tts_error));
+  } catch (error) {
+    setStatus(error.name==="AbortError"?"Request cancelled.":error.message,true);
+  } finally { request=null; controller=null; busy(false); }
+}
+el("send").onclick=()=>{ const text=el("typed").value.trim(); if(!text) return setStatus("Enter text first.",true); submit({text}); };
+el("send-file").onclick=()=>{ const blob=el("upload").files[0]; if(!blob) return setStatus("Choose an audio file first.",true); submit({blob}); };
+el("record").onclick=async()=>{
+  try {
+    if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw Error("Microphone recording unsupported or requires localhost/HTTPS.");
+    stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks=[];
+    const mime=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t));
+    recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+    recorder.ondataavailable=e=>{if(e.data.size) chunks.push(e.data);};
+    recorder.onstop=()=>{
+      const blob=new Blob(chunks,{type:recorder.mimeType || "audio/webm"});
+      stream.getTracks().forEach(t=>t.stop()); stream=null;
+      el("stop").disabled=true;
+      if (blob.size) submit({blob}); else setStatus("No recording captured.",true);
+    };
+    recorder.start(); el("record").disabled=true; el("stop").disabled=false; setStatus("Recording. Press Stop when finished.");
+  } catch(error) { if(stream) stream.getTracks().forEach(t=>t.stop()); setStatus(error.message,true); }
+};
+el("stop").onclick=()=>{if(recorder?.state==="recording") recorder.stop();};
+el("cancel").onclick=async()=>{
+  if(!request) return; const id=request;
+  try { await fetch("/api/cancel/"+encodeURIComponent(id)+"?session_id="+encodeURIComponent(session),{method:"POST"}); }
+  catch(_error) { /* Abort locally even if server is unreachable. */ }
+  controller?.abort(); setStatus("Cancellation requested.");
+};
+el("play").onclick=()=>{
+  if(!latest) return;
+  if(latest.audio_base64) {
+    el("player").hidden=false;
+    el("player").src="data:audio/wav;base64,"+latest.audio_base64;
+    el("player").play().catch(()=>setStatus("Press Play in audio controls.",true));
+  } else if("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(latest.response);
+    utterance.lang={pt:"pt-BR",en:"en-US",es:"es-ES"}[latestLanguage];
+    speechSynthesis.speak(utterance);
+  } else { setStatus("Browser text-to-speech unavailable.",true); }
+};
+el("clear").onclick=()=>freshSession().catch(()=>setStatus("Could not create session.",true));
+window.addEventListener("pagehide",()=>{ if(stream)stream.getTracks().forEach(t=>t.stop()); if("speechSynthesis" in window)speechSynthesis.cancel();});
+initialize();
+</script>
+</body>
+</html>

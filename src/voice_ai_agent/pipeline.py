@@ -12,7 +12,7 @@ from fastapi import UploadFile
 from .audio import prepare_audio
 from .config import Settings
 from .errors import VoiceError
-from .providers import LanguageModel, SpeechToText, TextToSpeech, build_providers
+from .providers import build_providers
 from .schemas import Metrics, Transcription, TurnResponse
 from .sessions import SessionStore
 from .tools import ToolRegistry
@@ -89,8 +89,6 @@ class VoicePipeline:
             tool_result = None
             response = model.content or ""
             if model.tool_name:
-                # This guard prevents an untrusted transcript from inducing note writes
-                # without explicit save language, regardless of the LLM's instructions.
                 if model.tool_name == "create_note":
                     requested = transcript.text.casefold().lstrip().startswith(
                         ("note:", "save note:", "anote:", "anotar:", "nota:", "apunta:")
@@ -137,7 +135,6 @@ class VoicePipeline:
             self.running.pop(request_id, None)
             self.busy_sessions.discard(session_id)
             self.completed.add(request_id)
-            # Bounded dedup cache for small, single-process demonstration usage.
             if len(self.completed) > 1000:
                 self.completed.clear()
 
