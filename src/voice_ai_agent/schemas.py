@@ -13,7 +13,7 @@ class Message(BaseModel):
 class Transcription(BaseModel):
     text: str
     language: str | None = None
-    source: Literal["scripted", "whisper_cpp"]
+    source: Literal["scripted", "whisper_cpp", "typed"]
     simulated: bool
 
 
@@ -58,7 +58,3 @@ class RuntimeInfo(BaseModel):
     tts: str
     microphone_is_recognized: bool
     disclaimer: str
-
-
-class PublicError(BaseModel):
-    detail: str
