@@ -41,6 +41,15 @@ jobs:
         run: pytest -q
       - name: Deterministic evaluation
         run: python evaluations/run.py
+      - name: Validate browser JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          html = Path("src/voice_ai_agent/static/index.html").read_text()
+          script = html.split("<script>", 1)[1].split("</script>", 1)[0]
+          Path("/tmp/voice-agent.js").write_text(script)
+          PY
+          node --check /tmp/voice-agent.js
       - name: Build wheel and source distribution
         run: python -m build
 
@@ -50,3 +59,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build self-contained container
         run: docker build --tag voice-ai-agent:ci .
+      - name: Smoke test actual eSpeak audio response
+        run: |
+          docker run --rm -d --name voice-agent-smoke -p 127.0.0.1:8000:8000 voice-ai-agent:ci
+          trap 'docker stop voice-agent-smoke' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8000/health
+          curl -fsS -X POST http://127.0.0.1:8000/api/turn/text \
+            -H 'Content-Type: application/json' \
+            -d '{"text":"hello","language":"en"}' | \
+            python -c 'import json,sys; p=json.load(sys.stdin); assert p["tts_source"]=="espeak"; assert p["audio_base64"].startswith("UklGR")'
+

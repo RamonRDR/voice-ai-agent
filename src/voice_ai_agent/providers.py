@@ -16,7 +16,9 @@ from .errors import VoiceError
 from .schemas import Message, Transcription
 from .tools import TOOL_SPECS
 
-SYSTEM_PROMPT = files("voice_ai_agent").joinpath("prompts/system_v1.txt").read_text(encoding="utf-8")
+SYSTEM_PROMPT = (
+    files("voice_ai_agent").joinpath("prompts/system_v1.txt").read_text(encoding="utf-8")
+)
 
 
 @dataclass
