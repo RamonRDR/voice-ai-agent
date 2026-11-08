@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voice-ai-agent"
+version = "0.1.0"
+description = "Modular conversational voice agent with local STT, tool calling and speech output"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{name = "Ramon Rodriguez"}]
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.32,<1",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.6,<3",
+  "python-multipart>=0.0.20,<1",
+  "httpx>=0.28,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<10", "pytest-asyncio>=0.24,<2", "ruff>=0.8", "mypy>=1.13"]
+ 
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+voice_ai_agent = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
