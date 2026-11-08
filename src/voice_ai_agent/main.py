@@ -73,8 +73,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             disclaimer=(
                 "DEMO: Speech-to-text is scripted and replies are rules, not AI recognition."
                 if demo
-                else "Real local transcription configured. Audio remains on this host unless a remote "
-                "LLM has explicitly been configured."
+                else "Real STT enabled. Audio stays local unless a remote LLM is configured."
             ),
         )
 

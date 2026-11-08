@@ -87,6 +87,8 @@ async def prepare_audio(upload: UploadFile, settings: Settings, directory: Path)
                 "-y",
                 "-i",
                 str(source),
+                "-t",
+                str(settings.max_audio_seconds + 1),
                 "-vn",
                 "-ac",
                 "1",

@@ -5,6 +5,7 @@ import json
 import re
 import tempfile
 from dataclasses import dataclass
+from importlib.resources import files
 from pathlib import Path
 from typing import Protocol
 
