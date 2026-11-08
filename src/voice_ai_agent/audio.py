@@ -79,9 +79,24 @@ async def prepare_audio(upload: UploadFile, settings: Settings, directory: Path)
     try:
         await run_command(
             [
-                settings.ffmpeg_executable, "-hide_banner", "-loglevel", "error",
-                "-nostdin", "-y", "-i", str(source), "-vn", "-ac", "1",
-                "-ar", "16000", "-acodec", "pcm_s16le", "-f", "wav", str(target),
+                settings.ffmpeg_executable,
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-nostdin",
+                "-y",
+                "-i",
+                str(source),
+                "-vn",
+                "-ac",
+                "1",
+                "-ar",
+                "16000",
+                "-acodec",
+                "pcm_s16le",
+                "-f",
+                "wav",
+                str(target),
             ],
             min(settings.process_timeout_seconds, 30),
         )

@@ -23,7 +23,8 @@ logger = logging.getLogger("voice_ai_agent")
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     app = FastAPI(
-        title="Voice AI Agent", version="0.1.0",
+        title="Voice AI Agent",
+        version="0.1.0",
         description="Turn-based voice assistant with explicitly labeled demo components.",
     )
     pipeline = VoicePipeline(settings)
@@ -71,8 +72,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             microphone_is_recognized=not demo,
             disclaimer=(
                 "DEMO: Speech-to-text is scripted and replies are rules, not AI recognition."
-                if demo else
-                "Real local transcription configured. Audio remains on this host unless a remote "
+                if demo
+                else "Real local transcription configured. Audio remains on this host unless a remote "
                 "LLM has explicitly been configured."
             ),
         )
@@ -107,9 +108,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/history/{session_id}")
     async def history(session_id: str) -> dict[str, object]:
         _id, _session = await pipeline.store.get(session_id)
-        return {"session_id": _id, "messages": [
-            item.model_dump() for item in await pipeline.store.history(_id)
-        ]}
+        return {
+            "session_id": _id,
+            "messages": [item.model_dump() for item in await pipeline.store.history(_id)],
+        }
 
     return app
 

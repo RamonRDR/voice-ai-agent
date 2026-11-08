@@ -10,8 +10,11 @@ from voice_ai_agent.tools import ToolRegistry, safe_calculate
 @pytest.mark.parametrize(
     ("expression", "expected"),
     [
-        ("2+2", "4"), ("(7-2)*3", "15"), ("10/4", "2.5"),
-        ("-5 + 9", "4"), ("0.1+0.2", "0.3"),
+        ("2+2", "4"),
+        ("(7-2)*3", "15"),
+        ("10/4", "2.5"),
+        ("-5 + 9", "4"),
+        ("0.1+0.2", "0.3"),
     ],
 )
 def test_calculate(expression: str, expected: str) -> None:
@@ -21,9 +24,16 @@ def test_calculate(expression: str, expected: str) -> None:
 @pytest.mark.parametrize(
     "expression",
     [
-        "__import__('os').system('echo bad')", "2**40", "2//1",
-        "1/0", "[x for x in range(5)]", "999999999999",
-        "(1+2", "'hello'", "4%2", "True + 1",
+        "__import__('os').system('echo bad')",
+        "2**40",
+        "2//1",
+        "1/0",
+        "[x for x in range(5)]",
+        "999999999999",
+        "(1+2",
+        "'hello'",
+        "4%2",
+        "True + 1",
     ],
 )
 def test_forbidden_calculations(expression: str) -> None:
@@ -75,7 +85,12 @@ def test_provider_config_requires_explicit_opt_in() -> None:
         Settings(_env_file=None, mode="local", stt_backend="demo")
     with pytest.raises(ValidationError):
         Settings(
-            _env_file=None, mode="remote", stt_backend="whisper_cpp",
-            whisper_model="model.bin", llm_backend="openai_compatible",
-            llm_endpoint="http://example.com", llm_api_key="x", llm_model="fake",
+            _env_file=None,
+            mode="remote",
+            stt_backend="whisper_cpp",
+            whisper_model="model.bin",
+            llm_backend="openai_compatible",
+            llm_endpoint="http://example.com",
+            llm_api_key="x",
+            llm_model="fake",
         )

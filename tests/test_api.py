@@ -95,7 +95,8 @@ def test_unsupported_or_corrupted_wav(client: TestClient) -> None:
     sid = new_session(client)
     invalid = b"RIFF" + bytes(4) + b"WAVE" + b"invalid"
     result = client.post(
-        "/api/turn", files={"audio": ("fake.wav", invalid, "audio/wav")},
+        "/api/turn",
+        files={"audio": ("fake.wav", invalid, "audio/wav")},
         data={"session_id": sid},
     )
     assert result.status_code == 422

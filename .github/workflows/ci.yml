@@ -34,7 +34,7 @@ jobs:
       - name: Ruff lint
         run: ruff check .
       - name: Ruff formatting
-        run: ruff format --diff . || true
+        run: ruff format --check .
       - name: Mypy
         run: mypy src
       - name: Pytest

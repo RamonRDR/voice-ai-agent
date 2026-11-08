@@ -6,7 +6,7 @@
 
 ## 002: Honest providers and zero paid defaults
 
-**Status:** Accepted. Demo STT returns a known phrase with \`simulated=true\`; rules routing is not a generative LLM. The UI makes the difference visible. Actual speech recognition uses whisper.cpp CLI, with ffmpeg conversion and a separately installed model. Actual audio output uses eSpeak CLI or browser SpeechSynthesis. A remote HTTPS chat completions provider is opt-in only, with explicit credentials and possible cost.
+**Status:** Accepted. Demo STT returns a known phrase with `simulated=true`; rules routing is not a generative LLM. The UI makes the difference visible. Actual speech recognition uses whisper.cpp CLI, with ffmpeg conversion and a separately installed model. Actual audio output uses eSpeak CLI or browser SpeechSynthesis. A remote HTTPS chat completions provider is opt-in only, with explicit credentials and possible cost.
 
 ## 003: Small, explicit tool boundary
 

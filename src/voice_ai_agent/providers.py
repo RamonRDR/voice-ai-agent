@@ -67,9 +67,7 @@ class ScriptedSTT:
 
     async def transcribe(self, wav_path: Path, language: str) -> Transcription:
         return Transcription(
-            text={"pt": "Que horas são?", "es": "¿Qué hora es?"}.get(
-                language, "What time is it?"
-            ),
+            text={"pt": "Que horas são?", "es": "¿Qué hora es?"}.get(language, "What time is it?"),
             language=language,
             source="scripted",
             simulated=True,
@@ -137,9 +135,9 @@ class RulesLLM:
             return ModelOutput(tool_name="calculate", tool_args={"expression": calc.group(1)})
         if any(w in lower for w in ("hello", "hi", "olá", "oi", "hola")):
             return ModelOutput(
-                content="Olá! Posso consultar a hora, calcular ou guardar notas." if
-                ("olá" in lower or "oi" in lower) else
-                "Hello! I can check the time, calculate, and save notes."
+                content="Olá! Posso consultar a hora, calcular ou guardar notas."
+                if ("olá" in lower or "oi" in lower)
+                else "Hello! I can check the time, calculate, and save notes."
             )
         return ModelOutput(
             content="Scripted demo: try 'What time is it?', 'calculate 2+2', "
@@ -221,13 +219,9 @@ class EspeakTTS:
 
 
 def build_providers(settings: Settings) -> tuple[SpeechToText, LanguageModel, TextToSpeech]:
-    stt: SpeechToText = (
-        ScriptedSTT() if settings.stt_backend == "demo" else WhisperCppSTT(settings)
-    )
+    stt: SpeechToText = ScriptedSTT() if settings.stt_backend == "demo" else WhisperCppSTT(settings)
     llm: LanguageModel = (
         RulesLLM() if settings.llm_backend == "rules" else OpenAICompatibleLLM(settings)
     )
-    tts: TextToSpeech = (
-        BrowserTTS() if settings.tts_backend == "browser" else EspeakTTS(settings)
-    )
+    tts: TextToSpeech = BrowserTTS() if settings.tts_backend == "browser" else EspeakTTS(settings)
     return stt, llm, tts

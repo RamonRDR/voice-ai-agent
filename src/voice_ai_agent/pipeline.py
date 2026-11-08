@@ -90,8 +90,12 @@ class VoicePipeline:
             response = model.content or ""
             if model.tool_name:
                 if model.tool_name == "create_note":
-                    requested = transcript.text.casefold().lstrip().startswith(
-                        ("note:", "save note:", "anote:", "anotar:", "nota:", "apunta:")
+                    requested = (
+                        transcript.text.casefold()
+                        .lstrip()
+                        .startswith(
+                            ("note:", "save note:", "anote:", "anotar:", "nota:", "apunta:")
+                        )
                     )
                     if not requested:
                         raise VoiceError("Note creation needs an explicit user request", 403)
