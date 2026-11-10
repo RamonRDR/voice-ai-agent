@@ -146,7 +146,7 @@ Copy `.env.example` and change only what you intend to enable:
 | `VOICE_TTS_BACKEND` | `browser` | `espeak` |
 | `VOICE_TIMEZONE` | `America/Sao_Paulo` in example | valid IANA timezone |
 
-For real local speech recognition, install whisper.cpp and its model separately. Then configure:
+The default local limits are **8 MiB** per uploaded file, **30 seconds** per recording, **12 history messages**, **30-minute session TTL** and a **90-second processing timeout**; all are configurable in `.env.example` and enforced within the declared bounds. The local settings default to UTC if the example `.env` is not loaded. For real local speech recognition, install whisper.cpp and its model separately. Then configure:
 
 ```dotenv
 VOICE_MODE=local
@@ -207,17 +207,6 @@ Use `python evaluations/run.py` for 20 **offline scripted-routing scenarios**. T
 
 For an interview recording or screenshot, operate the application yourself in the chosen mode and accurately label the provider configuration. No screenshots, hosted demo or results are asserted without evidence.
 
-## Security and privacy
-
-- Microphone starts only after a click and permission; audio output playback is user initiated.
-- Fixed file signatures, size/duration checks, canonicalized WAV, safe subprocess argument vectors (no shell), limited messages and output length.
-- No stored audio: temporary files are removed after processing, including failure. Notes and history stay in process memory until expiry/restart.
-- User transcripts are untrusted inputs. Function calls use fixed schemas and allowlisted execution; note writes require explicit user wording. No arbitrary code execution or unbounded URLs.
-- No secrets are checked into Git. The opt-in remote LLM sends text/history to the configured third-party provider, subject to its own privacy terms.
-- Minimal CI permissions, synthetic inputs, no public artifacts containing voice recordings, no model downloads, no auto deployment or auto merge.
-
-**Not production-ready:** the application intentionally has **no authentication, multi-tenant isolation, public rate limiting, distributed state or billing guardrails**. Do not expose it publicly before adding auth, origin/request protections, abuse limits, authenticated sessions, cost budgets and a security review. This local/demo limitation is deliberate. See [SECURITY](docs/SECURITY.md).
-
 ## Tests / CI
 
 ```bash
@@ -237,6 +226,17 @@ GitHub Actions uses standard GitHub-hosted Ubuntu runners, Python 3.12/3.14, ffm
 The `pytest | 37 passing` badge is a **static snapshot** of [GitHub Actions PR run #42485463114](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42485463114) on `feat/voice-ai-agent-mvp`: **37 passed, 0 failed, 0 skipped, 1 non-blocking third-party deprecation warning** in each Python version. The separate **20/20** badge refers only to the deterministic scripted evaluation in the same run; it is not a speech accuracy score or LLM benchmark. Ruff lint and formatting, mypy, JS syntax, wheel/sdist build, Docker build and actual eSpeak WAV smoke test all passed. No coverage percentage is claimed.
 
 The CI image badge follows the **feature branch** because `main` still contains only the initial files. On an authorized merge, change its branch selection to `main` in **all three READMEs**, then verify CI on main. After any test additions, removals, parametrizations or skips, read the latest successful **Pytest** and **Deterministic evaluation** jobs on the relevant branch, update the static badge counts in all three languages through a reviewed PR, and update [badge inventory and evidence](docs/BADGES.md). Badges must never be refreshed from a failed or partial test run.
+
+## Security and privacy
+
+- Microphone starts only after a click and permission; audio output playback is user initiated.
+- Fixed file signatures, size/duration checks, canonicalized WAV, safe subprocess argument vectors (no shell), limited messages and output length.
+- No stored audio: temporary files are removed after processing, including failure. Notes and history stay in process memory until expiry/restart.
+- User transcripts are untrusted inputs. Function calls use fixed schemas and allowlisted execution; note writes require explicit user wording. No arbitrary code execution or unbounded URLs.
+- No secrets are checked into Git. The opt-in remote LLM sends text/history to the configured third-party provider, subject to its own privacy terms.
+- Minimal CI permissions, synthetic inputs, no public artifacts containing voice recordings, no model downloads, no auto deployment or auto merge.
+
+**Not production-ready:** the application intentionally has **no authentication, multi-tenant isolation, public rate limiting, distributed state or billing guardrails**. Do not expose it publicly before adding auth, origin/request protections, abuse limits, authenticated sessions, cost budgets and a security review. This local/demo limitation is deliberate. See [SECURITY](docs/SECURITY.md).
 
 ## Known limitations / evolution
 

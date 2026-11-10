@@ -77,10 +77,6 @@ La entrada de texto se identifica como `typed`, sin pretender que fue reconocida
 
 Herramientas reales: `get_current_time` (zona horaria), `calculate` (aritmética limitada, sin ejecución de código), `create_note`, `list_notes` y `get_session_summary`. Hay validación de argumentos y una sola llamada por turno.
 
-## Requisitos previos
-
-Python 3.14 preferido (también CI con 3.12), FastAPI, Pydantic v2, httpx, pytest, Ruff, mypy, Docker, GitHub Actions. Para formatos WebM, OGG, MP3 y M4A se usa ffmpeg y WAV PCM16 mono de 16 kHz. El navegador requiere **localhost o HTTPS** y permiso explícito para el micrófono; no se graba automáticamente.
-
 ## Estructura del repositorio
 
 | Ruta | Responsabilidad |
@@ -92,6 +88,10 @@ Python 3.14 preferido (también CI con 3.12), FastAPI, Pydantic v2, httpx, pytes
 | `static/index.html`, `prompts/system_v1.txt` | Interfaz e instrucciones LLM versionadas |
 | `tests/`, `evaluations/` | Pruebas de audio sintético y evaluaciones determinísticas |
 | `.github/workflows/ci.yml`, `Dockerfile` | GitHub Actions y prueba real del contenedor |
+
+## Requisitos previos
+
+Python 3.14 preferido (también CI con 3.12), FastAPI, Pydantic v2, httpx, pytest, Ruff, mypy, Docker, GitHub Actions. Para formatos WebM, OGG, MP3 y M4A se usa ffmpeg y WAV PCM16 mono de 16 kHz. El navegador requiere **localhost o HTTPS** y permiso explícito para el micrófono; no se graba automáticamente.
 
 ## Instalación y ejecución local
 
@@ -112,6 +112,19 @@ Demo con Docker y voz de eSpeak: `docker build -t voice-ai-agent .` y `docker ru
 ## Configuración de STT, LLM y TTS
 
 Por defecto, `.env.example` configura `VOICE_MODE=demo`, `VOICE_STT_BACKEND=demo`, `VOICE_LLM_BACKEND=rules`, `VOICE_TTS_BACKEND=browser`. No hay llamadas de pago.
+
+| Variable | Predeterminado en el ejemplo | Observación |
+|---|---|---|
+| `VOICE_MODE` | `demo` | Alternativas: `local` y `remote` |
+| `VOICE_STT_BACKEND` | `demo` | `whisper_cpp` requiere ejecutable y modelo separados |
+| `VOICE_LLM_BACKEND` | `rules` | `openai_compatible` solo en `remote`, con autorización/costos |
+| `VOICE_TTS_BACKEND` | `browser` | `espeak` produce WAV local |
+| `VOICE_MAX_UPLOAD_BYTES` | `8388608` (8 MiB) | Límite de carga de audio |
+| `VOICE_MAX_AUDIO_SECONDS` | `30` | Duración máxima |
+| `VOICE_MAX_HISTORY` | `12` | Mensajes conservados |
+| `VOICE_SESSION_TTL_SECONDS` | `1800` (30 min) | Expiración de sesión en memoria |
+| `VOICE_PROCESS_TIMEOUT_SECONDS` | `90` | Tiempo máximo del proceso |
+| `VOICE_TIMEZONE` | `America/Sao_Paulo` | Zona del ejemplo; valor interno UTC |
 
 Para usar reconocimiento real de voz, instala whisper.cpp y un modelo GGML y configura:
 

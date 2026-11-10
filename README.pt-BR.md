@@ -78,10 +78,6 @@ A entrada digitada passa diretamente ao processamento textual e aparece como `so
 
 Ferramentas: `get_current_time` (fuso configurável), `calculate` (aritmética segura, sem `eval`), `create_note` e `list_notes` (anotações efêmeras por sessão), `get_session_summary` (resumo simples do histórico). Chamadas e argumentos ficam restritos a uma lista fixa.
 
-## Pré-requisitos
-
-Python 3.14 preferido, FastAPI, Pydantic v2, httpx, pytest, Ruff, mypy, Docker e GitHub Actions. CI também testa Python 3.12. ffmpeg é necessário para converter formatos WebM, OGG, MP3 e M4A para WAV PCM16 mono 16 kHz. WAV compatível funciona sem conversão. O navegador precisa de **localhost ou HTTPS** e permissão de microfone. A captura nunca começa automaticamente.
-
 ## Estrutura do repositório
 
 | Caminho | Responsabilidade |
@@ -93,6 +89,10 @@ Python 3.14 preferido, FastAPI, Pydantic v2, httpx, pytest, Ruff, mypy, Docker e
 | `static/index.html`, `prompts/system_v1.txt` | Interface e instruções versionadas do LLM |
 | `tests/`, `evaluations/` | Testes com áudio sintético e cenários determinísticos |
 | `.github/workflows/ci.yml`, `Dockerfile` | GitHub Actions e teste real do contêiner |
+
+## Pré-requisitos
+
+Python 3.14 preferido, FastAPI, Pydantic v2, httpx, pytest, Ruff, mypy, Docker e GitHub Actions. CI também testa Python 3.12. ffmpeg é necessário para converter formatos WebM, OGG, MP3 e M4A para WAV PCM16 mono 16 kHz. WAV compatível funciona sem conversão. O navegador precisa de **localhost ou HTTPS** e permissão de microfone. A captura nunca começa automaticamente.
 
 ## Instalação e execução local
 
@@ -113,6 +113,19 @@ Demo via Docker com TTS local eSpeak: `docker build -t voice-ai-agent .` e `dock
 ## Configurações: STT, LLM e TTS
 
 O `.env.example` usa `VOICE_MODE=demo`, `VOICE_STT_BACKEND=demo`, `VOICE_LLM_BACKEND=rules` e `VOICE_TTS_BACKEND=browser`. Nenhum serviço pago é chamado.
+
+| Variável | Padrão do exemplo | Observação |
+|---|---|---|
+| `VOICE_MODE` | `demo` | Alternativas: `local` e `remote` |
+| `VOICE_STT_BACKEND` | `demo` | `whisper_cpp` exige executável e modelo instalados |
+| `VOICE_LLM_BACKEND` | `rules` | `openai_compatible` só no modo `remote` com autorização/custos |
+| `VOICE_TTS_BACKEND` | `browser` | `espeak` gera WAV local |
+| `VOICE_MAX_UPLOAD_BYTES` | `8388608` (8 MiB) | Limite da carga de áudio |
+| `VOICE_MAX_AUDIO_SECONDS` | `30` | Duração permitida |
+| `VOICE_MAX_HISTORY` | `12` | Mensagens retidas no histórico |
+| `VOICE_SESSION_TTL_SECONDS` | `1800` (30 min) | Expiração da sessão em memória |
+| `VOICE_PROCESS_TIMEOUT_SECONDS` | `90` | Limite de tempo de processamento |
+| `VOICE_TIMEZONE` | `America/Sao_Paulo` | Fuso no exemplo; padrão interno UTC |
 
 Para transcrição real (Whisper local), instale whisper.cpp e um modelo GGML compatível e configure:
 
