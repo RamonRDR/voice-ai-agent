@@ -4,7 +4,6 @@ from io import BytesIO
 from pathlib import Path
 
 import httpx
-
 import pytest
 from conftest import make_wav
 from fastapi import UploadFile
