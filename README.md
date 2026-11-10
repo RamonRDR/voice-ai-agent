@@ -6,7 +6,7 @@
 
 [🇺🇸 English](README.md) · [🇧🇷 Português](README.pt-BR.md) · [🇪🇸 Español](README.es.md)
 
-[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg?branch=feat%2Fvoice-ai-agent-mvp)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
 ![Python: 3.14 CI plus 3.12](https://img.shields.io/badge/Python-3.14%20CI%20plus%203.12-3776AB)
 ![License: MIT](https://img.shields.io/badge/License-MIT-36B37E)
 
@@ -42,7 +42,7 @@
 
 </div>
 
-> **Project status:** MVP implemented on [Draft PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1), not merged to `main`. **Codex round 1** identified five findings (1 P1, 4 P2); **round 2** identified two P2 browser issues; **round 3** identified one further P2 race involving an outdated microphone permission rejection after BFCache restoration. All eight findings have code fixes and regression tests on this branch. **Round 4 has not yet been requested.** [Successful GitHub Actions feature-branch run #42852844518](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) verified **52/52 pytest per Python version, 8/8 simulated-browser state tests, 20/20 scripted evaluations**, and Docker eSpeak WAV smoke. Actual browser/device testing and external Whisper/LLM providers remain unvalidated.
+> **Project status:** MVP **merged into `main`** via [PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1) on 2026-11-10. Four completed Codex reviews addressed eight findings (one P1 and seven P2), with **no unresolved actionable findings** on the reviewed code commit `eb6842d`. The [successful main-branch GitHub Actions run #42855676467](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42855676467) confirms **52/52 pytest per Python version, 8/8 deterministic simulated-browser tests and 20/20 scripted evaluations**, plus Docker/eSpeak WAV smoke. Real-browser microphone behavior and external Whisper/LLM providers have not been independently validated.
 
 ## Overview
 
@@ -225,9 +225,9 @@ GitHub Actions uses standard GitHub-hosted Ubuntu runners, Python 3.12/3.14, ffm
 
 ## Badge evidence and maintenance
 
-The `pytest | 52 passing` badge is a **static snapshot** of [GitHub Actions feature-branch run #42852844518](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) on `feat/voice-ai-agent-mvp`: **52 passed, 0 failed, 0 skipped, 1 non-blocking third-party deprecation warning** in each Python version. The separate **20/20** badge refers only to the deterministic scripted evaluation in the same run; it is not a speech accuracy score or LLM benchmark. Ruff lint and formatting, mypy, JS syntax, **8/8 Node.js browser-state regression tests**, wheel/sdist build, Docker build and actual eSpeak WAV smoke test all passed. No coverage percentage is claimed.
+The `pytest | 52 passing` badge is a **static snapshot** of the [successful main-branch GitHub Actions run #42855676467](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42855676467): **52 passed, 0 failed, 0 skipped, 1 non-blocking third-party deprecation warning** in each Python version. The separate **20/20** badge describes deterministic scripted evaluation only, not speech accuracy or LLM performance. Ruff, mypy, JS syntax, **8/8 Node.js browser-state regressions**, wheel/sdist, Docker and actual eSpeak WAV smoke all passed. No coverage percentage is claimed.
 
-The CI image badge follows the **feature branch** because `main` still contains only the initial files. On an authorized merge, change its branch selection to `main` in **all three READMEs**, then verify CI on main. After any test additions, removals, parametrizations or skips, read the latest successful **Pytest**, **browser state**, and **Deterministic evaluation** jobs on the relevant branch, update the static badge counts in all three languages through a reviewed PR, and update [badge inventory and evidence](docs/BADGES.md). Badges must never be refreshed from a failed or partial test run.
+The **CI badge tracks `main`**, the repository's only branch after PR #1 was merged and its feature branch was automatically removed. Static test badges are refreshed only from successful runs of the relevant branch, never from failed or partial runs. Their evidence and inventory are documented in [docs/BADGES.md](docs/BADGES.md).
 
 ## Security and privacy
 

@@ -6,7 +6,7 @@
 
 [🇺🇸 English](README.md) · [🇧🇷 Português](README.pt-BR.md) · [🇪🇸 Español](README.es.md)
 
-[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg?branch=feat%2Fvoice-ai-agent-mvp)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
 ![Python: 3.14 CI plus 3.12](https://img.shields.io/badge/Python-3.14%20CI%20plus%203.12-3776AB)
 ![License: MIT](https://img.shields.io/badge/License-MIT-36B37E)
 
@@ -42,7 +42,7 @@
 
 </div>
 
-> **Status do projeto:** MVP no [PR #1 em rascunho](https://github.com/RamonRDR/voice-ai-agent/pull/1), ainda não integrado à `main`. A **primeira revisão do Codex** apontou cinco problemas (um P1, quatro P2); a **segunda**, outros dois P2 no navegador; a **terceira**, mais um P2 envolvendo falha tardia de permissão do microfone após o retorno pelo histórico. Os oito apontamentos receberam correções e testes de regressão na branch. **A quarta revisão ainda não foi solicitada.** A [execução de GitHub Actions na branch #42852844518](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) aprovou **52/52 testes pytest por versão Python, 8/8 testes de estado do navegador, 20/20 avaliações determinísticas** e a síntese WAV real no Docker. A validação em navegador/dispositivo físico e dos provedores Whisper/LLM reais ainda está pendente.
+> **Status do projeto:** MVP **integrado à `main`** pelo [PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1) em 10/11/2026. Quatro revisões concluídas do Codex trataram oito apontamentos (um P1 e sete P2), com **nenhum apontamento acionável pendente** no commit revisado `eb6842d`. A [execução aprovada do GitHub Actions na main #42855676467](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42855676467) confirma **52/52 testes pytest por versão Python, 8/8 testes simulados do navegador e 20/20 avaliações determinísticas**, além do Docker/eSpeak WAV. A gravação em navegador real e os provedores Whisper/LLM externos ainda não foram validados de forma independente.
 
 ## Visão geral
 
@@ -188,9 +188,9 @@ Há 20 cenários de avaliação **determinística do roteador demo**, não bench
 
 ## Evidências dos badges e manutenção
 
-O badge `pytest | 52 passing` é um **registro estático** da [execução do GitHub Actions na branch #42852844518](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) na branch `feat/voice-ai-agent-mvp`: **52 aprovados, 0 falhas, 0 ignorados e 1 aviso não bloqueante de dependência de terceiros** em cada versão Python. O badge **20/20** refere-se apenas à avaliação determinística do roteador demo, não à precisão de fala ou a benchmarks do LLM. Ruff lint/format, mypy, sintaxe JS, **8/8 testes de estado do navegador com Node.js**, empacotamento wheel/sdist, Docker e teste WAV real com eSpeak foram aprovados. Não há cobertura percentual medida.
+O badge `pytest | 52 passing` é um **registro estático** da [execução aprovada do GitHub Actions na main #42855676467](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42855676467): **52 aprovados, 0 falhas, 0 ignorados e 1 aviso não bloqueante de dependência de terceiros** em cada versão Python. O badge **20/20** refere-se apenas à avaliação determinística do roteador demo, não à precisão de voz ou desempenho de LLM. Ruff, mypy, sintaxe JS, **8/8 testes de estado do navegador com Node.js**, wheel/sdist, Docker e teste WAV real com eSpeak foram aprovados. Não há cobertura percentual medida.
 
-O badge dinâmico de CI aponta para a **branch de desenvolvimento** porque a `main` ainda contém somente os arquivos iniciais. Após eventual merge autorizado, altere a seleção para `main` nos **três READMEs** e confira a CI nessa branch. Sempre que testes mudarem, consulte os jobs **Pytest**, **Test browser state** e **Deterministic evaluation** aprovados, atualize as contagens estáticas nas três traduções por PR revisado e atualize o [inventário de evidências](docs/BADGES.md). Nunca atualize os badges a partir de testes com falha ou execução incompleta.
+O **badge de CI acompanha a `main`**, a única branch do repositório após o merge do PR #1 e a exclusão automática da branch de desenvolvimento. Os badges estáticos de testes somente são atualizados com execuções aprovadas da branch correspondente, nunca com resultados parciais ou falhos. O inventário está em [docs/BADGES.md](docs/BADGES.md).
 
 ## Segurança e privacidade
 

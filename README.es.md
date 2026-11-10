@@ -6,7 +6,7 @@
 
 [🇺🇸 English](README.md) · [🇧🇷 Português](README.pt-BR.md) · [🇪🇸 Español](README.es.md)
 
-[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg?branch=feat%2Fvoice-ai-agent-mvp)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
 ![Python: 3.14 CI plus 3.12](https://img.shields.io/badge/Python-3.14%20CI%20plus%203.12-3776AB)
 ![License: MIT](https://img.shields.io/badge/License-MIT-36B37E)
 
@@ -42,7 +42,7 @@
 
 </div>
 
-> **Estado del proyecto:** MVP en el [PR #1 en borrador](https://github.com/RamonRDR/voice-ai-agent/pull/1), todavía sin fusionar con `main`. La **primera revisión de Codex** detectó cinco problemas (uno P1, cuatro P2); la **segunda**, dos P2 adicionales del navegador; la **tercera**, otro P2 por un rechazo tardío del permiso de micrófono después de restaurar una página. Los ocho hallazgos tienen correcciones y pruebas de regresión en esta rama. **Todavía no se solicitó la cuarta revisión.** La [ejecución de GitHub Actions en la rama #42852844518](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) aprobó **52/52 pruebas pytest por versión Python, 8/8 pruebas del navegador, 20/20 evaluaciones determinísticas** y síntesis WAV real con Docker. Aún faltan pruebas en un navegador/dispositivo real y validación con proveedores Whisper/LLM externos.
+> **Estado del proyecto:** MVP **fusionado en `main`** mediante [PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1) el 10/11/2026. Cuatro revisiones completas de Codex solucionaron ocho hallazgos (uno P1 y siete P2), con **ningún hallazgo accionable pendiente** en el código revisado `eb6842d`. La [ejecución aprobada de GitHub Actions en main #42855676467](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42855676467) confirma **52/52 pruebas pytest por versión Python, 8/8 pruebas simuladas del navegador y 20/20 evaluaciones determinísticas**, además de Docker/eSpeak WAV. No se han validado de forma independiente el micrófono en un navegador real ni los proveedores Whisper/LLM externos.
 
 ## Visión general
 
@@ -187,9 +187,9 @@ Incluye 20 escenarios determinísticos del **enrutador demo**, no mediciones del
 
 ## Evidencias de los badges y mantenimiento
 
-El badge `pytest | 52 passing` es una **instantánea estática** de la [ejecución GitHub Actions #42852844518 de la rama](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) en `feat/voice-ai-agent-mvp`: **52 aprobadas, 0 fallidas, 0 omitidas y 1 aviso no bloqueante de una dependencia externa** en cada versión Python. El badge **20/20** se refiere únicamente a la evaluación determinística del enrutador demo, no a la precisión de voz ni a benchmarks de LLM. Ruff lint/format, mypy, sintaxis JS, **8/8 pruebas de estado del navegador con Node.js**, paquetes wheel/sdist, Docker y la prueba real WAV de eSpeak fueron aprobados. No se afirma ningún porcentaje de cobertura.
+El badge `pytest | 52 passing` es una **instantánea estática** de la [ejecución aprobada de GitHub Actions en main #42855676467](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42855676467): **52 aprobadas, 0 fallidas, 0 omitidas y 1 aviso no bloqueante de una dependencia externa** por versión Python. El badge **20/20** se refiere únicamente a la evaluación determinística del enrutador demo, no a precisión de voz ni rendimiento del LLM. Ruff, mypy, sintaxis JS, **8/8 pruebas de estado del navegador con Node.js**, wheel/sdist, Docker y prueba WAV real con eSpeak fueron aprobados. No se afirma ningún porcentaje de cobertura.
 
-El badge dinámico de CI sigue la **rama de desarrollo** porque `main` todavía contiene los archivos iniciales. Después de una fusión autorizada, cambia la rama a `main` en **los tres READMEs** y verifica CI allí. Cuando cambien los casos de prueba, consulta los jobs aprobados **Pytest**, **Test browser state** y **Deterministic evaluation**, actualiza los recuentos estáticos en los tres idiomas mediante PR revisado y actualiza el [inventario de evidencias](docs/BADGES.md). No uses ejecuciones fallidas o incompletas para actualizar badges.
+El **badge de CI sigue `main`**, la única rama del repositorio después de fusionar el PR #1 y eliminar automáticamente la rama de desarrollo. Las métricas estáticas solo se actualizan a partir de ejecuciones aprobadas de la rama correspondiente, nunca de resultados parciales o fallidos. El inventario está en [docs/BADGES.md](docs/BADGES.md).
 
 ## Seguridad y privacidad
 
