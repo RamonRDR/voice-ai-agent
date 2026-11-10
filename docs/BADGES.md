@@ -1,6 +1,6 @@
 # Badge inventory and verification
 
-This inventory covers **only** [RamonRDR/voice-ai-agent](https://github.com/RamonRDR/voice-ai-agent). It is based on code, dependency declarations, Dockerfile, CI workflow and the [passing feature-branch CI run](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42849121931); it does not assert that untested real speech providers are production-ready.
+This inventory covers **only** [RamonRDR/voice-ai-agent](https://github.com/RamonRDR/voice-ai-agent). It is based on code, dependency declarations, Dockerfile, CI workflow and the [passing feature-branch CI run](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518); it does not assert that untested real speech providers are production-ready.
 
 **Snapshot:** 2026-11-10. **Reference branch:** `feat/voice-ai-agent-mvp`. **PR:** [#1](https://github.com/RamonRDR/voice-ai-agent/pull/1) (draft). **Badges in each README:** 30. **Source of test result:** 52 passed, 0 failed, 0 skipped and 1 non-blocking warning in Python 3.12 and 3.14; 20/20 offline scripted routing scenarios; Docker image and eSpeak WAV smoke test succeeded.
 
@@ -26,26 +26,26 @@ This inventory covers **only** [RamonRDR/voice-ai-agent](https://github.com/Ramo
 | Voice and AI capabilities | Tool Calling · 5 allowlisted | src/voice_ai_agent/tools.py; tests/test_tools.py | Five local functions with strict validation |
 | Voice and AI capabilities | eSpeak NG · TTS verified | Dockerfile; .github/workflows/ci.yml | Real WAV response verified in Docker smoke test |
 | Voice and AI capabilities | Web Speech API · browser TTS | src/voice_ai_agent/static/index.html | SpeechSynthesis on user click |
-| Tests, documentation and quality | pytest · 52 passing | CI run #42849121931 Python 3.12 and 3.14 jobs | 52 passed, 0 failed, 0 skipped, 1 non-blocking warning |
+| Tests, documentation and quality | pytest · 52 passing | CI run #42852844518 Python 3.12 and 3.14 jobs | 52 passed, 0 failed, 0 skipped, 1 non-blocking warning |
 | Tests, documentation and quality | pytest asyncio · async tests | pyproject.toml; tests/test_pipeline.py | Async pytest fixtures and cases |
 | Tests, documentation and quality | Ruff · lint & format | pyproject.toml; .github/workflows/ci.yml | Both CI checks passed |
 | Tests, documentation and quality | mypy · type checked | pyproject.toml; .github/workflows/ci.yml | mypy src passed |
-| Tests, documentation and quality | Offline evaluation · 20 of 20 scripted | evaluations/scenarios.json; evaluations/run.py; CI run #42849121931 | Deterministic evaluation only, not a real STT/LLM benchmark |
+| Tests, documentation and quality | Offline evaluation · 20 of 20 scripted | evaluations/scenarios.json; evaluations/run.py; CI run #42852844518 | Deterministic evaluation only, not a real STT/LLM benchmark |
 | Tests, documentation and quality | OpenAPI · documented | src/voice_ai_agent/main.py; tests/test_api.py | FastAPI /docs and /openapi.json |
 | Tests, documentation and quality | JS syntax · checked | .github/workflows/ci.yml | node --check on extracted browser script passed |
-| Tests, documentation and quality | Browser state tests · 7 passing | tests/browser_state.test.cjs; .github/workflows/ci.yml; CI run #42849121931 | 7 passed, 0 failed, 0 skipped (Node.js built-in test runner, simulated browser APIs) |
+| Tests, documentation and quality | Browser state tests · 8 passing | tests/browser_state.test.cjs; .github/workflows/ci.yml; CI run #42852844518 | 8 passed, 0 failed, 0 skipped (Node.js built-in test runner, simulated browser APIs) |
 | Tests, documentation and quality | Python build · wheel & sdist | pyproject.toml; .github/workflows/ci.yml | python -m build passed |
 | Tests, documentation and quality | Docker smoke · eSpeak WAV | .github/workflows/ci.yml | Live container WAV response assertion passed |
 
 ## Static test-count maintenance
 
-The `pytest | 52 passing`, `Browser state tests | 7 passing` and `Offline evaluation | 20 of 20 scripted` badges are **static snapshots**, not continuously calculated status. After a code/test change, wait for a completed and successful CI run for the correct branch. Inspect the actual Pytest, Test browser state and Deterministic evaluation job output (including failures, skips and XPASS/XFAIL). Update the counts in `README.md`, `README.pt-BR.md`, `README.es.md` and this inventory together through a reviewed PR. Never infer counts from files or collected functions. No auto-commits or paid services are used.
+The `pytest | 52 passing`, `Browser state tests | 8 passing` and `Offline evaluation | 20 of 20 scripted` badges are **static snapshots**, not continuously calculated status. After a code/test change, wait for a completed and successful CI run for the correct branch. Inspect the actual Pytest, Test browser state and Deterministic evaluation job output (including failures, skips and XPASS/XFAIL). Update the counts in `README.md`, `README.pt-BR.md`, `README.es.md` and this inventory together through a reviewed PR. Never infer counts from files or collected functions. No auto-commits or paid services are used.
 
 The CI badge is **dynamic** but currently filtered to `feat/voice-ai-agent-mvp` because the initial `main` does not yet have the CI workflow. After an explicitly authorized merge, change the badge's `branch` query parameter in **all three READMEs** to `main` and confirm a passing main-branch run.
 
 ## Items intentionally not badged
 
-No PostgreSQL/Redis/SQLite, ORM, Alembic, Docker Compose, Next.js/React, RAG, embeddings, MCP, OAuth, WhatsApp, coverage percentage, WER score, hosted demo, public deployment, full-duplex streaming or real Whisper/remote-LLM validation are evidenced by this repository. Node.js is used **only for JavaScript syntax validation and seven deterministic browser-state regression tests in CI**; it is not the application's runtime and does not constitute real-device microphone testing.
+No PostgreSQL/Redis/SQLite, ORM, Alembic, Docker Compose, Next.js/React, RAG, embeddings, MCP, OAuth, WhatsApp, coverage percentage, WER score, hosted demo, public deployment, full-duplex streaming or real Whisper/remote-LLM validation are evidenced by this repository. Node.js is used **only for JavaScript syntax validation and eight deterministic browser-state regression tests in CI**; it is not the application's runtime and does not constitute real-device microphone testing.
 
 ## Review and approval policy
 

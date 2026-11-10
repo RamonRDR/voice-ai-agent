@@ -36,13 +36,13 @@
 ![Offline evaluation: 20 of 20 scripted](https://img.shields.io/badge/Offline%20evaluation-20%20of%2020%20scripted-6F42C1)
 ![OpenAPI: documented](https://img.shields.io/badge/OpenAPI-documented-6BA539)
 ![JS syntax: checked](https://img.shields.io/badge/JS%20syntax-checked-F7DF1E)
-![Browser state tests: 7 passing](https://img.shields.io/badge/Browser%20state%20tests-7%20passing-F7DF1E)
+![Browser state tests: 8 passing](https://img.shields.io/badge/Browser%20state%20tests-8%20passing-F7DF1E)
 ![Python build: wheel & sdist](https://img.shields.io/badge/Python%20build-wheel%20%26%20sdist-6B7280)
 ![Docker smoke: eSpeak WAV](https://img.shields.io/badge/Docker%20smoke-eSpeak%20WAV-2496ED)
 
 </div>
 
-> **Project status:** MVP implemented on [Draft PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1), not merged to `main`. **Codex round 1** identified five findings (1 P1, 4 P2), all treated with regression tests. **Round 2** identified two additional P2 browser issues (late cancellation and back-forward cache restoration), also corrected with focused tests; another review has not yet been requested. [GitHub Actions feature-branch run #42849121931](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42849121931) passed **52/52 pytest per Python version, 7/7 simulated-browser state tests, 20/20 scripted evaluations** and Docker eSpeak WAV smoke. Real Whisper STT and external LLM remain unvalidated with actual providers.
+> **Project status:** MVP implemented on [Draft PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1), not merged to `main`. **Codex round 1** identified five findings (1 P1, 4 P2); **round 2** identified two P2 browser issues; **round 3** identified one further P2 race involving an outdated microphone permission rejection after BFCache restoration. All eight findings have code fixes and regression tests on this branch. **Round 4 has not yet been requested.** [Successful GitHub Actions feature-branch run #42852844518](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) verified **52/52 pytest per Python version, 8/8 simulated-browser state tests, 20/20 scripted evaluations**, and Docker eSpeak WAV smoke. Actual browser/device testing and external Whisper/LLM providers remain unvalidated.
 
 ## Overview
 
@@ -225,7 +225,7 @@ GitHub Actions uses standard GitHub-hosted Ubuntu runners, Python 3.12/3.14, ffm
 
 ## Badge evidence and maintenance
 
-The `pytest | 52 passing` badge is a **static snapshot** of [GitHub Actions feature-branch run #42849121931](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42849121931) on `feat/voice-ai-agent-mvp`: **52 passed, 0 failed, 0 skipped, 1 non-blocking third-party deprecation warning** in each Python version. The separate **20/20** badge refers only to the deterministic scripted evaluation in the same run; it is not a speech accuracy score or LLM benchmark. Ruff lint and formatting, mypy, JS syntax, **7/7 Node.js browser-state regression tests**, wheel/sdist build, Docker build and actual eSpeak WAV smoke test all passed. No coverage percentage is claimed.
+The `pytest | 52 passing` badge is a **static snapshot** of [GitHub Actions feature-branch run #42852844518](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42852844518) on `feat/voice-ai-agent-mvp`: **52 passed, 0 failed, 0 skipped, 1 non-blocking third-party deprecation warning** in each Python version. The separate **20/20** badge refers only to the deterministic scripted evaluation in the same run; it is not a speech accuracy score or LLM benchmark. Ruff lint and formatting, mypy, JS syntax, **8/8 Node.js browser-state regression tests**, wheel/sdist build, Docker build and actual eSpeak WAV smoke test all passed. No coverage percentage is claimed.
 
 The CI image badge follows the **feature branch** because `main` still contains only the initial files. On an authorized merge, change its branch selection to `main` in **all three READMEs**, then verify CI on main. After any test additions, removals, parametrizations or skips, read the latest successful **Pytest**, **browser state**, and **Deterministic evaluation** jobs on the relevant branch, update the static badge counts in all three languages through a reviewed PR, and update [badge inventory and evidence](docs/BADGES.md). Badges must never be refreshed from a failed or partial test run.
 
