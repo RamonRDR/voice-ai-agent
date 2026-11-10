@@ -36,13 +36,13 @@
 ![Offline evaluation: 20 of 20 scripted](https://img.shields.io/badge/Offline%20evaluation-20%20of%2020%20scripted-6F42C1)
 ![OpenAPI: documented](https://img.shields.io/badge/OpenAPI-documented-6BA539)
 ![JS syntax: checked](https://img.shields.io/badge/JS%20syntax-checked-F7DF1E)
-![Browser state tests: 3 passing](https://img.shields.io/badge/Browser%20state%20tests-3%20passing-F7DF1E)
+![Browser state tests: 7 passing](https://img.shields.io/badge/Browser%20state%20tests-7%20passing-F7DF1E)
 ![Python build: wheel & sdist](https://img.shields.io/badge/Python%20build-wheel%20%26%20sdist-6B7280)
 ![Docker smoke: eSpeak WAV](https://img.shields.io/badge/Docker%20smoke-eSpeak%20WAV-2496ED)
 
 </div>
 
-> **Estado del proyecto:** MVP en el [PR #1 en borrador](https://github.com/RamonRDR/voice-ai-agent/pull/1), sin fusionar con `main`. La **primera revisión de Codex encontró cinco problemas** (uno P1, cuatro P2), corregidos en la rama con pruebas de regresión y **pendientes de segunda revisión**. La [ejecución de GitHub Actions en la rama #42845722631](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42845722631) aprobó 52/52 pruebas pytest por versión Python, 3/3 pruebas de estado del navegador, 20/20 evaluaciones determinísticas y síntesis WAV real en Docker. Whisper real y el LLM remoto siguen sin validación con proveedores reales.
+> **Estado del proyecto:** MVP en el [PR #1 en borrador](https://github.com/RamonRDR/voice-ai-agent/pull/1), sin fusionar con `main`. La **primera revisión de Codex** identificó cinco problemas (uno P1, cuatro P2), ya corregidos. La **segunda revisión** señaló otros dos P2 en la interfaz (cancelación tardía y restauración del historial), también corregidos con pruebas de regresión; todavía no se solicitó la siguiente revisión. La [ejecución de GitHub Actions en la rama #42849121931](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42849121931) aprobó **52/52 pruebas pytest por versión Python, 7/7 pruebas de estado del navegador, 20/20 evaluaciones determinísticas** y síntesis WAV real en Docker. Whisper real y el LLM remoto siguen sin validarse con proveedores reales.
 
 ## Visión general
 
@@ -183,11 +183,11 @@ node --test tests/browser_state.test.cjs
 python -m build
 ```
 
-Incluye 20 escenarios determinísticos del **enrutador demo**, no mediciones del rendimiento de Whisper ni LLM externos. Las pruebas cubren la API, audio sintético, duración, silencio, errores, sesiones, herramientas, límites, seguridad y cancelación. Tres pruebas Node.js validan el bloqueo de operaciones simultáneas, la limpieza del micrófono y el envío único al terminar la grabación, sin sustituir las pruebas manuales en un navegador real. GitHub Actions utiliza runners estándar, sin micrófono físico, servicios pagos, modelos pesados, autodespliegue o fusión automática. No existe WER medido sin transcripciones de referencia.
+Incluye 20 escenarios determinísticos del **enrutador demo**, no mediciones del rendimiento de Whisper ni LLM externos. Las pruebas cubren la API, audio sintético, duración, silencio, errores, sesiones, herramientas, límites, seguridad y cancelación. Siete pruebas Node.js validan las operaciones simultáneas, la limpieza del micrófono, el envío único, el aislamiento de cancelaciones y la restauración del historial, sin sustituir las pruebas manuales en un navegador real. GitHub Actions utiliza runners estándar, sin micrófono físico, servicios pagos, modelos pesados, autodespliegue o fusión automática. No existe WER medido sin transcripciones de referencia.
 
 ## Evidencias de los badges y mantenimiento
 
-El badge `pytest | 52 passing` es una **instantánea estática** de la [ejecución GitHub Actions #42845722631 de la rama](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42845722631) en `feat/voice-ai-agent-mvp`: **52 aprobadas, 0 fallidas, 0 omitidas y 1 aviso no bloqueante de una dependencia externa** en cada versión Python. El badge **20/20** se refiere únicamente a la evaluación determinística del enrutador demo, no a la precisión de voz ni a benchmarks de LLM. Ruff lint/format, mypy, sintaxis JS, **3/3 pruebas de estado del navegador con Node.js**, paquetes wheel/sdist, Docker y la prueba real WAV de eSpeak fueron aprobados. No se afirma ningún porcentaje de cobertura.
+El badge `pytest | 52 passing` es una **instantánea estática** de la [ejecución GitHub Actions #42849121931 de la rama](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42849121931) en `feat/voice-ai-agent-mvp`: **52 aprobadas, 0 fallidas, 0 omitidas y 1 aviso no bloqueante de una dependencia externa** en cada versión Python. El badge **20/20** se refiere únicamente a la evaluación determinística del enrutador demo, no a la precisión de voz ni a benchmarks de LLM. Ruff lint/format, mypy, sintaxis JS, **7/7 pruebas de estado del navegador con Node.js**, paquetes wheel/sdist, Docker y la prueba real WAV de eSpeak fueron aprobados. No se afirma ningún porcentaje de cobertura.
 
 El badge dinámico de CI sigue la **rama de desarrollo** porque `main` todavía contiene los archivos iniciales. Después de una fusión autorizada, cambia la rama a `main` en **los tres READMEs** y verifica CI allí. Cuando cambien los casos de prueba, consulta los jobs aprobados **Pytest**, **Test browser state** y **Deterministic evaluation**, actualiza los recuentos estáticos en los tres idiomas mediante PR revisado y actualiza el [inventario de evidencias](docs/BADGES.md). No uses ejecuciones fallidas o incompletas para actualizar badges.
 
