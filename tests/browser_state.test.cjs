@@ -16,7 +16,7 @@ const pending = () => {
   return {promise, resolve};
 };
 
-function sandbox({deferMicrophone=false, deferTurn=false}={}) {
+function sandbox({deferMicrophone=false, deferTurn=false, deferCancel=false}={}) {
   const nodes = new Map();
   const element = id => {
     if (!nodes.has(id)) {
@@ -34,6 +34,7 @@ function sandbox({deferMicrophone=false, deferTurn=false}={}) {
   const listeners = {};
   const micRequests = [];
   const microphoneGate = pending();
+  const cancellations = [];
   let sessionCount = 0;
   const config = {mode:"demo",stt:"demo",llm:"rules",tts:"browser",disclaimer:"Scripted demo"};
   class Recorder {
@@ -54,11 +55,11 @@ function sandbox({deferMicrophone=false, deferTurn=false}={}) {
     tracks.push(track);
     return {getTracks(){return [track];}};
   }
-  const fetch = async url => {
+  const fetch = async (url, options={}) => {
     if (url==="/api/config") return {ok:true,json:async()=>config};
     if (url==="/api/session") return {ok:true,json:async()=>({session_id:"session-"+(++sessionCount)})};
     if (url.startsWith("/api/turn")) {
-      const turn=pending(); turns.push(turn);
+      const turn=pending(); turn.signal=options.signal; turns.push(turn);
       if (deferTurn) return turn.promise;
       return {ok:true,json:async()=>({
         transcript:{text:"hello",simulated:true},response:"Hello!",
@@ -66,7 +67,10 @@ function sandbox({deferMicrophone=false, deferTurn=false}={}) {
         metrics:{stt_ms:0,llm_ms:0,tools_ms:0,tts_ms:0,total_ms:0}
       })};
     }
-    if (url.startsWith("/api/cancel")) return {ok:true};
+    if (url.startsWith("/api/cancel")) {
+      const cancel=pending(); cancel.url=url; cancellations.push(cancel);
+      return deferCancel ? cancel.promise : {ok:true};
+    }
     throw Error("Unexpected request: "+url);
   };
   const context = {
@@ -80,8 +84,8 @@ function sandbox({deferMicrophone=false, deferTurn=false}={}) {
     crypto:{randomUUID:()=>"req-"+turns.length},console
   };
   vm.runInNewContext(script, context, {filename:"voice-ui.js"});
-  return {element, tracks, recorders, turns, listeners, micRequests, microphoneGate,
-    trackStream, sessions:()=>sessionCount};
+  return {element, tracks, recorders, turns, cancellations, listeners, micRequests,
+    microphoneGate, trackStream, sessions:()=>sessionCount};
 }
 
 test("recording blocks submissions and repeated microphone capture", async () => {
@@ -156,4 +160,115 @@ test("a stopped recording submits only one turn and releases its audio track", a
   assert.equal(ui.turns.length,1);
   assert.equal(ui.element("stop").disabled,true);
   assert.equal(ui.element("send").disabled,false);
+});
+
+function successfulTurn() {
+  return {ok:true,json:async()=>({
+    transcript:{text:"hello",simulated:true},response:"Hello!",
+    tool:null,audio_base64:null,
+    metrics:{stt_ms:0,llm_ms:0,tools_ms:0,tts_ms:0,total_ms:0}
+  })};
+}
+
+test("late cancellation only aborts its own request and cannot replace a newer status", async () => {
+  const ui=sandbox({deferTurn:true,deferCancel:true});
+  await settle();
+  ui.element("typed").value="first";
+  ui.element("send").onclick();
+  assert.equal(ui.turns.length,1);
+  const first=ui.turns[0];
+  const cancel=ui.element("cancel").onclick();
+  assert.equal(ui.cancellations.length,1);
+  assert.equal(ui.element("cancel").disabled,true);
+  assert.match(ui.cancellations[0].url,/\/api\/cancel\/req-0\?/);
+
+  first.resolve(successfulTurn());
+  await settle();
+  assert.equal(ui.element("send").disabled,false);
+  ui.element("typed").value="second";
+  ui.element("send").onclick();
+  assert.equal(ui.turns.length,2);
+  const second=ui.turns[1];
+  assert.equal(second.signal.aborted,false);
+  const processingStatus=ui.element("status").textContent;
+  assert.match(processingStatus,/Processing text/);
+
+  ui.cancellations[0].resolve({ok:true});
+  await cancel;
+  assert.equal(first.signal.aborted,true);
+  assert.equal(second.signal.aborted,false);
+  assert.equal(ui.element("status").textContent,processingStatus);
+  assert.equal(ui.element("cancel").disabled,false);
+
+  second.resolve(successfulTurn());
+  await settle();
+  assert.equal(ui.element("send").disabled,false);
+});
+
+test("BFCache pageshow reinitializes a closed page after microphone cleanup", async () => {
+  const ui=sandbox();
+  await settle();
+  await ui.element("record").onclick();
+  assert.equal(ui.element("stop").disabled,false);
+  ui.listeners.pagehide({persisted:true});
+  assert.equal(ui.tracks[0].stops,1);
+  assert.equal(ui.element("send").disabled,true);
+  assert.equal(ui.element("record").disabled,true);
+  ui.listeners.pageshow({persisted:true});
+  await settle();
+  assert.equal(ui.sessions(),2);
+  assert.equal(ui.element("record").disabled,false);
+  assert.equal(ui.element("send").disabled,false);
+  assert.equal(ui.element("language").disabled,false);
+  assert.equal(ui.element("clear").disabled,false);
+  assert.equal(ui.element("stop").disabled,true);
+  assert.equal(ui.element("cancel").disabled,true);
+  await ui.element("record").onclick();
+  assert.equal(ui.recorders.length,2);
+  ui.listeners.pagehide({persisted:true});
+  assert.equal(ui.tracks[1].stops,1);
+});
+
+test("BFCache restores controls without accepting stale HTTP turn callbacks", async () => {
+  const ui=sandbox({deferTurn:true});
+  await settle();
+  ui.element("typed").value="old request";
+  ui.element("send").onclick();
+  const old=ui.turns[0];
+  ui.listeners.pagehide({persisted:true});
+  assert.equal(old.signal.aborted,true);
+  ui.listeners.pageshow({persisted:true});
+  await settle();
+  assert.equal(ui.sessions(),2);
+  const status=ui.element("status").textContent;
+  assert.equal(status,"New private in-memory session created.");
+  old.resolve(successfulTurn());
+  await settle();
+  assert.equal(ui.element("status").textContent,status);
+  assert.equal(ui.element("record").disabled,false);
+  assert.equal(ui.element("send").disabled,false);
+  assert.equal(ui.element("conversation").textContent,"");
+  ui.element("typed").value="new request";
+  ui.element("send").onclick();
+  assert.equal(ui.turns.length,2);
+  assert.equal(ui.turns[1].signal.aborted,false);
+  ui.turns[1].resolve(successfulTurn());
+  await settle();
+  assert.equal(ui.element("send").disabled,false);
+});
+
+test("a permission granted after BFCache navigation cannot start an old recorder", async () => {
+  const ui=sandbox({deferMicrophone:true});
+  await settle();
+  const old=ui.element("record").onclick();
+  ui.listeners.pagehide({persisted:true});
+  ui.listeners.pageshow({persisted:true});
+  await settle();
+  assert.equal(ui.element("record").disabled,false);
+  const stale=ui.trackStream();
+  ui.microphoneGate.resolve(stale);
+  await old;
+  assert.equal(ui.recorders.length,0);
+  assert.equal(stale.getTracks()[0].stops,1);
+  assert.equal(ui.element("record").disabled,false);
 });

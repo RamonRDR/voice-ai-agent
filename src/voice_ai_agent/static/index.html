@@ -87,6 +87,7 @@
 const el = id => document.getElementById(id);
 let session = null, request = null, controller = null, recorder = null;
 let stream = null, latest = null, latestLanguage = "en", phase = "initializing";
+let pageGeneration = 0;
 const setStatus = (message, error=false) => {
   el("status").textContent=message;
   el("status").classList.toggle("error",error);
@@ -111,32 +112,39 @@ function showMessage(who, content) {
 }
 async function freshSession() {
   if (phase!=="idle" && phase!=="initializing") return;
+  const generation=pageGeneration;
   setPhase("starting-session");
   try {
     const response=await fetch("/api/session",{method:"POST"});
     if (!response.ok) throw Error("Could not start a session");
-    session=(await response.json()).session_id;
+    const data=await response.json();
+    if (generation!==pageGeneration || phase==="closed") return;
+    session=data.session_id;
     el("conversation").replaceChildren();
     el("metrics").textContent=""; el("tool").textContent="";
     el("player").hidden=true; el("play").disabled=true; latest=null;
     setStatus("New private in-memory session created.");
   } finally {
-    if (phase!=="closed") setPhase("idle");
+    if (generation===pageGeneration && phase!=="closed") setPhase("idle");
   }
 }
 async function initialize() {
+  const generation=pageGeneration;
   setPhase("initializing");
   try {
     const response=await fetch("/api/config");
     if (!response.ok) throw Error("Configuration unavailable");
     const config=await response.json();
+    if (generation!==pageGeneration || phase==="closed") return;
     el("mode").textContent=config.mode.toUpperCase()+" · STT "+config.stt+" · LLM "+config.llm;
     el("disclaimer").textContent=config.disclaimer +
       (config.tts==="browser" ? " Audio output uses your browser's speech synthesis when you click Play." : " Audio output uses local eSpeak.");
     await freshSession();
   } catch (_error) {
-    if (phase!=="closed") setPhase("idle");
-    setStatus("Cannot connect to local API.",true);
+    if (generation===pageGeneration && phase!=="closed") {
+      setPhase("idle");
+      setStatus("Cannot connect to local API.",true);
+    }
   }
 }
 async function submit({blob, text}) {
@@ -148,6 +156,7 @@ async function submit({blob, text}) {
     return;
   }
   const id=crypto.randomUUID(), aborter=new AbortController();
+  const generation=pageGeneration;
   request=id; controller=aborter; setPhase("processing");
   el("play").disabled=true;
   const language=el("language").value; latestLanguage=language;
@@ -170,6 +179,7 @@ async function submit({blob, text}) {
       });
     }
     const result=await response.json();
+    if (generation!==pageGeneration || request!==id || phase==="closed") return;
     if (!response.ok) throw Error(typeof result.detail==="string" ? result.detail : "Request failed");
     showMessage("user",result.transcript.text + (result.transcript.simulated?" [scripted STT demo]":""));
     showMessage("assistant",result.response);
@@ -180,9 +190,11 @@ async function submit({blob, text}) {
       " ms · Tools "+m.tools_ms+" ms · TTS "+m.tts_ms+" ms · Total "+m.total_ms+" ms";
     setStatus(result.tts_error || "Completed. Select Play for speech output.",Boolean(result.tts_error));
   } catch (error) {
-    setStatus(error.name==="AbortError"?"Request cancelled.":error.message,true);
+    if (request===id && generation===pageGeneration && phase!=="closed") {
+      setStatus(error.name==="AbortError"?"Request cancelled.":error.message,true);
+    }
   } finally {
-    if (request===id) {
+    if (request===id && generation===pageGeneration) {
       request=null; controller=null;
       if (phase!=="closed") setPhase("idle");
     }
@@ -203,6 +215,7 @@ el("send-file").onclick=()=>{
 el("record").onclick=async()=>{
   if (phase!=="idle") return;
   if (!session) return setStatus("Session unavailable; reload the page.",true);
+  const generation=pageGeneration;
   setPhase("acquiring");
   let acquired=null;
   try {
@@ -210,7 +223,7 @@ el("record").onclick=async()=>{
       throw Error("Microphone recording unsupported or requires localhost/HTTPS.");
     }
     acquired=await navigator.mediaDevices.getUserMedia({audio:true});
-    if (phase!=="acquiring") {
+    if (phase!=="acquiring" || generation!==pageGeneration) {
       acquired.getTracks().forEach(track=>track.stop());
       return;
     }
@@ -222,6 +235,7 @@ el("record").onclick=async()=>{
       acquired.getTracks().forEach(track=>track.stop());
       if (stream===acquired) stream=null;
       if (recorder===current) recorder=null;
+      if (generation!==pageGeneration) return;
       if (phase!=="stopping") {
         if (phase!=="closed") setPhase("idle");
         return;
@@ -234,7 +248,9 @@ el("record").onclick=async()=>{
       acquired.getTracks().forEach(track=>track.stop());
       if (stream===acquired) stream=null;
       if (recorder===current) recorder=null;
-      if (phase!=="closed") {setPhase("idle"); setStatus("Recording failed.",true);}
+      if (generation===pageGeneration && phase!=="closed") {
+        setPhase("idle"); setStatus("Recording failed.",true);
+      }
     };
     stream=acquired; recorder=current;
     current.start();
@@ -244,7 +260,9 @@ el("record").onclick=async()=>{
     if (acquired) acquired.getTracks().forEach(track=>track.stop());
     if (stream===acquired) stream=null;
     recorder=null;
-    if (phase!=="closed") {setPhase("idle"); setStatus(error.message,true);}
+    if (generation===pageGeneration && phase!=="closed") {
+      setPhase("idle"); setStatus(error.message,true);
+    }
   }
 };
 el("stop").onclick=()=>{
@@ -258,13 +276,17 @@ el("stop").onclick=()=>{
   }
 };
 el("cancel").onclick=async()=>{
-  if (phase!=="processing" || !request) return;
-  const id=request;
+  if (phase!=="processing" || !request || !controller) return;
+  // Retain the original turn's controller across the asynchronous cancel request.
+  const id=request, originalController=controller, originalSession=session;
+  el("cancel").disabled=true;
   try {
-    await fetch("/api/cancel/"+encodeURIComponent(id)+"?session_id="+encodeURIComponent(session),{method:"POST"});
+    await fetch("/api/cancel/"+encodeURIComponent(id)+"?session_id="+encodeURIComponent(originalSession),{method:"POST"});
   } catch (_error) { /* Abort locally even if server is unreachable. */ }
-  controller?.abort();
-  setStatus("Cancellation requested.");
+  originalController.abort();
+  if (request===id && controller===originalController && phase==="processing") {
+    setStatus("Cancellation requested.");
+  }
 };
 el("play").onclick=()=>{
   if(!latest) return;
@@ -281,10 +303,20 @@ el("play").onclick=()=>{
 };
 el("clear").onclick=()=>freshSession().catch(()=>setStatus("Could not create session.",true));
 window.addEventListener("pagehide",()=>{
+  // The page may be cached rather than destroyed; invalidate in-flight callbacks.
+  pageGeneration+=1;
   setPhase("closed");
   if (stream) stream.getTracks().forEach(track=>track.stop());
+  stream=null; recorder=null;
   controller?.abort();
+  request=null; controller=null;
   if ("speechSynthesis" in window) speechSynthesis.cancel();
+});
+window.addEventListener("pageshow",event=>{
+  if (event.persisted && phase==="closed") {
+    // BFCache restores the same JavaScript heap without re-running this script.
+    initialize();
+  }
 });
 initialize();
 </script>
