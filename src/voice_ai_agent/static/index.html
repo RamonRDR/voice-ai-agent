@@ -258,11 +258,11 @@ el("record").onclick=async()=>{
     setStatus("Recording. Press Stop when finished.");
   } catch(error) {
     if (acquired) acquired.getTracks().forEach(track=>track.stop());
+    // A permission failure from a previous BFCache page must not clear a newer recorder.
+    if (generation!==pageGeneration || phase==="closed") return;
     if (stream===acquired) stream=null;
     recorder=null;
-    if (generation===pageGeneration && phase!=="closed") {
-      setPhase("idle"); setStatus(error.message,true);
-    }
+    setPhase("idle"); setStatus(error.message,true);
   }
 };
 el("stop").onclick=()=>{

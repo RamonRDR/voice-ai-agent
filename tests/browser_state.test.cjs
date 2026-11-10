@@ -11,12 +11,12 @@ const markup = fs.readFileSync(
 const script = markup.split("<script>", 2)[1].split("</script>", 1)[0];
 const settle = () => new Promise(resolve => setImmediate(resolve));
 const pending = () => {
-  let resolve;
-  const promise = new Promise(done => { resolve = done; });
-  return {promise, resolve};
+  let resolve, reject;
+  const promise = new Promise((done, fail) => { resolve = done; reject = fail; });
+  return {promise, resolve, reject};
 };
 
-function sandbox({deferMicrophone=false, deferTurn=false, deferCancel=false}={}) {
+function sandbox({deferMicrophone=false, deferFirstMicrophone=false, deferTurn=false, deferCancel=false}={}) {
   const nodes = new Map();
   const element = id => {
     if (!nodes.has(id)) {
@@ -78,7 +78,8 @@ function sandbox({deferMicrophone=false, deferTurn=false, deferCancel=false}={})
     window:{MediaRecorder:Recorder,addEventListener:(name,fn)=>{listeners[name]=fn;}},
     navigator:{mediaDevices:{getUserMedia:()=>{
       micRequests.push(true);
-      return deferMicrophone ? microphoneGate.promise : Promise.resolve(trackStream());
+      return deferMicrophone || (deferFirstMicrophone && micRequests.length===1)
+        ? microphoneGate.promise : Promise.resolve(trackStream());
     }}},
     MediaRecorder:Recorder,fetch,Blob,FormData,AbortController,
     crypto:{randomUUID:()=>"req-"+turns.length},console
@@ -271,4 +272,45 @@ test("a permission granted after BFCache navigation cannot start an old recorder
   assert.equal(ui.recorders.length,0);
   assert.equal(stale.getTracks()[0].stops,1);
   assert.equal(ui.element("record").disabled,false);
+});
+
+
+test("stale microphone permission rejection cannot clear a newer recording", async () => {
+  const ui=sandbox({deferFirstMicrophone:true,deferTurn:true});
+  await settle();
+
+  const oldPermission=ui.element("record").onclick();
+  assert.equal(ui.recorders.length,0);
+  assert.equal(ui.element("record").disabled,true);
+  ui.listeners.pagehide({persisted:true});
+  ui.listeners.pageshow({persisted:true});
+  await settle();
+
+  // Start a new, independent recording while the old permission prompt is pending.
+  await ui.element("record").onclick();
+  assert.equal(ui.micRequests.length,2);
+  assert.equal(ui.recorders.length,1);
+  const current=ui.recorders[0];
+  assert.equal(current.state,"recording");
+  assert.equal(ui.element("stop").disabled,false);
+  assert.equal(ui.tracks[0].stops,0);
+  const status=ui.element("status").textContent;
+
+  // The previous page's permission denial must not touch the current recorder/UI.
+  ui.microphoneGate.reject(new Error("Previous page microphone permission denied"));
+  await oldPermission;
+  assert.equal(ui.element("status").textContent,status);
+  assert.equal(current.state,"recording");
+  assert.equal(ui.element("record").disabled,true);
+  assert.equal(ui.element("stop").disabled,false);
+  assert.equal(ui.tracks[0].stops,0);
+
+  ui.element("stop").onclick();
+  assert.equal(current.state,"inactive");
+  assert.equal(ui.tracks[0].stops,1);
+  assert.equal(ui.turns.length,1);
+  ui.turns[0].resolve(successfulTurn());
+  await settle();
+  assert.equal(ui.element("record").disabled,false);
+  assert.equal(ui.element("stop").disabled,true);
 });
