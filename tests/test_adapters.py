@@ -118,9 +118,18 @@ async def test_remote_llm_accepts_valid_tool_call(monkeypatch) -> None:
                 200,
                 json={
                     "choices": [
-                        {"message": {"tool_calls": [{"function": {
-                            "name": "calculate", "arguments": '{"expression":"2+2"}'
-                        }}]}}
+                        {
+                            "message": {
+                                "tool_calls": [
+                                    {
+                                        "function": {
+                                            "name": "calculate",
+                                            "arguments": '{"expression":"2+2"}',
+                                        }
+                                    }
+                                ]
+                            }
+                        }
                     ]
                 },
             )
