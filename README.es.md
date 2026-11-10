@@ -29,19 +29,20 @@
 ![eSpeak NG: TTS verified](https://img.shields.io/badge/eSpeak%20NG-TTS%20verified-3478C0)
 ![Web Speech API: browser TTS](https://img.shields.io/badge/Web%20Speech%20API-browser%20TTS-3478C0)
 
-![pytest: 37 passing](https://img.shields.io/badge/pytest-37%20passing-0A9EDC)
+![pytest: 52 passing](https://img.shields.io/badge/pytest-52%20passing-0A9EDC)
 ![pytest asyncio: async tests](https://img.shields.io/badge/pytest%20asyncio-async%20tests-0A9EDC)
 ![Ruff: lint & format](https://img.shields.io/badge/Ruff-lint%20%26%20format-D7FF64)
 ![mypy: type checked](https://img.shields.io/badge/mypy-type%20checked-2A6DB4)
 ![Offline evaluation: 20 of 20 scripted](https://img.shields.io/badge/Offline%20evaluation-20%20of%2020%20scripted-6F42C1)
 ![OpenAPI: documented](https://img.shields.io/badge/OpenAPI-documented-6BA539)
 ![JS syntax: checked](https://img.shields.io/badge/JS%20syntax-checked-F7DF1E)
+![Browser state tests: 3 passing](https://img.shields.io/badge/Browser%20state%20tests-3%20passing-F7DF1E)
 ![Python build: wheel & sdist](https://img.shields.io/badge/Python%20build-wheel%20%26%20sdist-6B7280)
 ![Docker smoke: eSpeak WAV](https://img.shields.io/badge/Docker%20smoke-eSpeak%20WAV-2496ED)
 
 </div>
 
-> **Estado del proyecto:** MVP implementado en el [PR #1 en borrador](https://github.com/RamonRDR/voice-ai-agent/pull/1), todavía no fusionado con `main`. La [ejecución de GitHub Actions del PR](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42485463114) aprobó 37/37 pruebas pytest, 20/20 evaluaciones determinísticas del modo demo, síntesis WAV en Docker y controles de calidad. **Todavía no se solicitó revisión de Codex.** Whisper real y el LLM remoto no han sido validados con proveedores reales.
+> **Estado del proyecto:** MVP en el [PR #1 en borrador](https://github.com/RamonRDR/voice-ai-agent/pull/1), sin fusionar con `main`. La **primera revisión de Codex encontró cinco problemas** (uno P1, cuatro P2), corregidos en la rama con pruebas de regresión y **pendientes de segunda revisión**. La [ejecución de GitHub Actions en la rama #42845722631](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42845722631) aprobó 52/52 pruebas pytest por versión Python, 3/3 pruebas de estado del navegador, 20/20 evaluaciones determinísticas y síntesis WAV real en Docker. Whisper real y el LLM remoto siguen sin validación con proveedores reales.
 
 ## Visión general
 
@@ -55,7 +56,7 @@ Agente conversacional por voz **por turnos**, desarrollado en Python y FastAPI c
 - Validación de WAV, WebM, OGG, MP3 y M4A con límites, conversión PCM16 16 kHz, detección de silencio y limpieza temporal.
 - STT simulado en demo, adaptador whisper.cpp opcional, respuestas por reglas, LLM remoto opcional y TTS real del navegador o eSpeak.
 - Cinco herramientas locales validadas, sesiones efímeras, historial limitado, tiempos por etapa y OpenAPI.
-- 37 pruebas pytest, 20 evaluaciones determinísticas, GitHub Actions y documentación en tres idiomas.
+- 52 pruebas pytest, 20 evaluaciones determinísticas, GitHub Actions y documentación en tres idiomas.
 
 ## Pila tecnológica
 
@@ -178,16 +179,17 @@ ruff format --check .
 mypy src
 pytest -q
 python evaluations/run.py
+node --test tests/browser_state.test.cjs
 python -m build
 ```
 
-Incluye 20 escenarios determinísticos del **enrutador demo**, no mediciones del rendimiento de Whisper ni LLM externos. Las pruebas cubren la API, audio sintético, duración, silencio, errores, sesiones, herramientas, límites, seguridad y cancelación. GitHub Actions utiliza runners estándar, sin micrófono físico, servicios pagos, modelos pesados, autodespliegue o fusión automática. No existe WER medido sin transcripciones de referencia.
+Incluye 20 escenarios determinísticos del **enrutador demo**, no mediciones del rendimiento de Whisper ni LLM externos. Las pruebas cubren la API, audio sintético, duración, silencio, errores, sesiones, herramientas, límites, seguridad y cancelación. Tres pruebas Node.js validan el bloqueo de operaciones simultáneas, la limpieza del micrófono y el envío único al terminar la grabación, sin sustituir las pruebas manuales en un navegador real. GitHub Actions utiliza runners estándar, sin micrófono físico, servicios pagos, modelos pesados, autodespliegue o fusión automática. No existe WER medido sin transcripciones de referencia.
 
 ## Evidencias de los badges y mantenimiento
 
-El badge `pytest | 37 passing` es una **instantánea estática** de la [ejecución GitHub Actions #42485463114 del PR](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42485463114) en `feat/voice-ai-agent-mvp`: **37 aprobadas, 0 fallidas, 0 omitidas y 1 aviso no bloqueante de una dependencia externa** en cada versión Python. El badge **20/20** se refiere únicamente a la evaluación determinística del enrutador demo, no a la precisión de voz ni a benchmarks de LLM. Ruff lint/format, mypy, sintaxis JS, paquetes wheel/sdist, Docker y la prueba real WAV de eSpeak fueron aprobados. No se afirma ningún porcentaje de cobertura.
+El badge `pytest | 52 passing` es una **instantánea estática** de la [ejecución GitHub Actions #42845722631 de la rama](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42845722631) en `feat/voice-ai-agent-mvp`: **52 aprobadas, 0 fallidas, 0 omitidas y 1 aviso no bloqueante de una dependencia externa** en cada versión Python. El badge **20/20** se refiere únicamente a la evaluación determinística del enrutador demo, no a la precisión de voz ni a benchmarks de LLM. Ruff lint/format, mypy, sintaxis JS, **3/3 pruebas de estado del navegador con Node.js**, paquetes wheel/sdist, Docker y la prueba real WAV de eSpeak fueron aprobados. No se afirma ningún porcentaje de cobertura.
 
-El badge dinámico de CI sigue la **rama de desarrollo** porque `main` todavía contiene los archivos iniciales. Después de una fusión autorizada, cambia la rama a `main` en **los tres READMEs** y verifica CI allí. Cuando cambien los casos de prueba, consulta los jobs aprobados **Pytest** y **Deterministic evaluation**, actualiza los recuentos estáticos en los tres idiomas mediante PR revisado y actualiza el [inventario de evidencias](docs/BADGES.md). No uses ejecuciones fallidas o incompletas para actualizar badges.
+El badge dinámico de CI sigue la **rama de desarrollo** porque `main` todavía contiene los archivos iniciales. Después de una fusión autorizada, cambia la rama a `main` en **los tres READMEs** y verifica CI allí. Cuando cambien los casos de prueba, consulta los jobs aprobados **Pytest**, **Test browser state** y **Deterministic evaluation**, actualiza los recuentos estáticos en los tres idiomas mediante PR revisado y actualiza el [inventario de evidencias](docs/BADGES.md). No uses ejecuciones fallidas o incompletas para actualizar badges.
 
 ## Seguridad y privacidad
 

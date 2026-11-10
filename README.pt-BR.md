@@ -29,19 +29,20 @@
 ![eSpeak NG: TTS verified](https://img.shields.io/badge/eSpeak%20NG-TTS%20verified-3478C0)
 ![Web Speech API: browser TTS](https://img.shields.io/badge/Web%20Speech%20API-browser%20TTS-3478C0)
 
-![pytest: 37 passing](https://img.shields.io/badge/pytest-37%20passing-0A9EDC)
+![pytest: 52 passing](https://img.shields.io/badge/pytest-52%20passing-0A9EDC)
 ![pytest asyncio: async tests](https://img.shields.io/badge/pytest%20asyncio-async%20tests-0A9EDC)
 ![Ruff: lint & format](https://img.shields.io/badge/Ruff-lint%20%26%20format-D7FF64)
 ![mypy: type checked](https://img.shields.io/badge/mypy-type%20checked-2A6DB4)
 ![Offline evaluation: 20 of 20 scripted](https://img.shields.io/badge/Offline%20evaluation-20%20of%2020%20scripted-6F42C1)
 ![OpenAPI: documented](https://img.shields.io/badge/OpenAPI-documented-6BA539)
 ![JS syntax: checked](https://img.shields.io/badge/JS%20syntax-checked-F7DF1E)
+![Browser state tests: 3 passing](https://img.shields.io/badge/Browser%20state%20tests-3%20passing-F7DF1E)
 ![Python build: wheel & sdist](https://img.shields.io/badge/Python%20build-wheel%20%26%20sdist-6B7280)
 ![Docker smoke: eSpeak WAV](https://img.shields.io/badge/Docker%20smoke-eSpeak%20WAV-2496ED)
 
 </div>
 
-> **Status do projeto:** MVP implementado no [PR #1 em rascunho](https://github.com/RamonRDR/voice-ai-agent/pull/1), ainda não integrado à `main`. A [execução do GitHub Actions no PR](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42485463114) aprovou 37/37 testes pytest, 20/20 avaliações determinísticas do modo demo, síntese WAV no Docker e verificações de qualidade. **A revisão do Codex ainda não foi solicitada.** Whisper real e LLM remoto ainda não foram validados com provedores reais.
+> **Status do projeto:** MVP no [PR #1 em rascunho](https://github.com/RamonRDR/voice-ai-agent/pull/1), ainda não integrado à `main`. A **primeira revisão do Codex identificou cinco apontamentos** (um P1, quatro P2), já tratados na branch com testes de regressão e **aguardando segunda revisão**. A [execução do GitHub Actions na branch #42845722631](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42845722631) aprovou 52/52 testes pytest em cada versão Python, 3/3 testes de estado do navegador, 20/20 avaliações determinísticas e a síntese WAV real no Docker. Whisper real e LLM remoto ainda não foram validados com provedores externos.
 
 ## Visão geral
 
@@ -55,7 +56,7 @@ Agente de voz demonstrativo, **por turnos**, criado em Python e FastAPI para por
 - Validação de WAV, WebM, OGG, MP3 e M4A com limite, conversão para PCM16 16 kHz, rejeição de silêncio e limpeza temporária.
 - STT demo simulado, adaptador whisper.cpp real opcional, respostas por regras, LLM remoto opcional e TTS real no navegador ou eSpeak.
 - Cinco ferramentas locais validadas, sessões efêmeras, histórico limitado, métricas por etapa e endpoints OpenAPI.
-- 37 testes pytest, 20 avaliações determinísticas, GitHub Actions e documentação trilíngue.
+- 52 testes pytest, 20 avaliações determinísticas, GitHub Actions e documentação trilíngue.
 
 ## Tecnologias
 
@@ -179,16 +180,17 @@ ruff format --check .
 mypy src
 pytest -q
 python evaluations/run.py
+node --test tests/browser_state.test.cjs
 python -m build
 ```
 
-Há 20 cenários de avaliação **determinística do roteador demo**, não benchmarks de Whisper ou LLM real. Testes incluem API, uploads, silêncio, limites, sessões, isolamento, ferramentas, injeção de prompt simulada, cancelamento e falhas. Os áudios de teste são sintéticos. A CI usa runners hospedados do GitHub, sem microfone físico, modelos grandes, APIs pagas ou computador pessoal. Não executa deploy ou merge automático. WER só deve ser medido com transcrições de referência reais, não foi inventado.
+Há 20 cenários de avaliação **determinística do roteador demo**, não benchmarks de Whisper ou LLM real. Testes incluem API, uploads, silêncio, limites, sessões, isolamento, ferramentas, injeção de prompt simulada, cancelamento e falhas. Os áudios de teste são sintéticos. Três testes Node.js verificam o bloqueio de operações concorrentes, a limpeza do microfone e o envio único após a gravação, sem substituir uma validação manual em navegador real. A CI usa runners hospedados do GitHub, sem microfone físico, modelos grandes, APIs pagas ou computador pessoal. Não executa deploy ou merge automático. WER só deve ser medido com transcrições de referência reais, não foi inventado.
 
 ## Evidências dos badges e manutenção
 
-O badge `pytest | 37 passing` é um **registro estático** da [execução do GitHub Actions no PR #42485463114](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42485463114) na branch `feat/voice-ai-agent-mvp`: **37 aprovados, 0 falhas, 0 ignorados e 1 aviso não bloqueante de dependência de terceiros** em cada versão Python. O badge **20/20** refere-se apenas à avaliação determinística do roteador demo, não à precisão de fala ou a benchmarks do LLM. Ruff lint/format, mypy, sintaxe JS, empacotamento wheel/sdist, Docker e teste WAV real com eSpeak foram aprovados. Não há cobertura percentual medida.
+O badge `pytest | 52 passing` é um **registro estático** da [execução do GitHub Actions na branch #42845722631](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42845722631) na branch `feat/voice-ai-agent-mvp`: **52 aprovados, 0 falhas, 0 ignorados e 1 aviso não bloqueante de dependência de terceiros** em cada versão Python. O badge **20/20** refere-se apenas à avaliação determinística do roteador demo, não à precisão de fala ou a benchmarks do LLM. Ruff lint/format, mypy, sintaxe JS, **3/3 testes de estado do navegador com Node.js**, empacotamento wheel/sdist, Docker e teste WAV real com eSpeak foram aprovados. Não há cobertura percentual medida.
 
-O badge dinâmico de CI aponta para a **branch de desenvolvimento** porque a `main` ainda contém somente os arquivos iniciais. Após eventual merge autorizado, altere a seleção para `main` nos **três READMEs** e confira a CI nessa branch. Sempre que testes mudarem, consulte os jobs **Pytest** e **Deterministic evaluation** aprovados, atualize as contagens estáticas nas três traduções por PR revisado e atualize o [inventário de evidências](docs/BADGES.md). Nunca atualize os badges a partir de testes com falha ou execução incompleta.
+O badge dinâmico de CI aponta para a **branch de desenvolvimento** porque a `main` ainda contém somente os arquivos iniciais. Após eventual merge autorizado, altere a seleção para `main` nos **três READMEs** e confira a CI nessa branch. Sempre que testes mudarem, consulte os jobs **Pytest**, **Test browser state** e **Deterministic evaluation** aprovados, atualize as contagens estáticas nas três traduções por PR revisado e atualize o [inventário de evidências](docs/BADGES.md). Nunca atualize os badges a partir de testes com falha ou execução incompleta.
 
 ## Segurança e privacidade
 
