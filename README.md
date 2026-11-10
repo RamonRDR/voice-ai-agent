@@ -1,9 +1,49 @@
-# Voice AI Agent
+<div align="center">
 
-[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
-[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+# Voice AI Agent 🎙️
 
-**English** | [Português](README.pt-BR.md) | [Español](README.es.md)
+**Turn speech into actions with modular Python, controlled tools, and transparent AI modes.**
+
+[🇺🇸 English](README.md) · [🇧🇷 Português](README.pt-BR.md) · [🇪🇸 Español](README.es.md)
+
+[![CI](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml/badge.svg?branch=feat%2Fvoice-ai-agent-mvp)](https://github.com/RamonRDR/voice-ai-agent/actions/workflows/ci.yml)
+![Python: 3.14 CI plus 3.12](https://img.shields.io/badge/Python-3.14%20CI%20plus%203.12-3776AB)
+![License: MIT](https://img.shields.io/badge/License-MIT-36B37E)
+
+![FastAPI: >=0.115](https://img.shields.io/badge/FastAPI-%3E%3D0.115-009688)
+![Pydantic: v2](https://img.shields.io/badge/Pydantic-v2-E92063)
+![Pydantic Settings: environment](https://img.shields.io/badge/Pydantic%20Settings-environment-B72867)
+![Uvicorn: ASGI](https://img.shields.io/badge/Uvicorn-ASGI-4051B5)
+![httpx: >=0.28](https://img.shields.io/badge/httpx-%3E%3D0.28-5A6EA8)
+![python multipart: uploads](https://img.shields.io/badge/python%20multipart-uploads-64748B)
+![HTML5: web interface](https://img.shields.io/badge/HTML5-web%20interface-E34F26)
+![JavaScript: browser UI](https://img.shields.io/badge/JavaScript-browser%20UI-F7DF1E)
+![Docker: image build](https://img.shields.io/badge/Docker-image%20build-2496ED)
+![FFmpeg: audio conversion](https://img.shields.io/badge/FFmpeg-audio%20conversion-4B8E36)
+
+![MediaRecorder: mic capture](https://img.shields.io/badge/MediaRecorder-mic%20capture-6B7280)
+![STT: scripted demo](https://img.shields.io/badge/STT-scripted%20demo-6B7280)
+![whisper.cpp: STT adapter only](https://img.shields.io/badge/whisper.cpp-STT%20adapter%20only-6B7280)
+![LLM: opt in HTTPS adapter](https://img.shields.io/badge/LLM-opt%20in%20HTTPS%20adapter-6B7280)
+![Tool Calling: 5 allowlisted](https://img.shields.io/badge/Tool%20Calling-5%20allowlisted-6F42C1)
+![eSpeak NG: TTS verified](https://img.shields.io/badge/eSpeak%20NG-TTS%20verified-3478C0)
+![Web Speech API: browser TTS](https://img.shields.io/badge/Web%20Speech%20API-browser%20TTS-3478C0)
+
+![pytest: 37 passing](https://img.shields.io/badge/pytest-37%20passing-0A9EDC)
+![pytest asyncio: async tests](https://img.shields.io/badge/pytest%20asyncio-async%20tests-0A9EDC)
+![Ruff: lint & format](https://img.shields.io/badge/Ruff-lint%20%26%20format-D7FF64)
+![mypy: type checked](https://img.shields.io/badge/mypy-type%20checked-2A6DB4)
+![Offline evaluation: 20 of 20 scripted](https://img.shields.io/badge/Offline%20evaluation-20%20of%2020%20scripted-6F42C1)
+![OpenAPI: documented](https://img.shields.io/badge/OpenAPI-documented-6BA539)
+![JS syntax: checked](https://img.shields.io/badge/JS%20syntax-checked-F7DF1E)
+![Python build: wheel & sdist](https://img.shields.io/badge/Python%20build-wheel%20%26%20sdist-6B7280)
+![Docker smoke: eSpeak WAV](https://img.shields.io/badge/Docker%20smoke-eSpeak%20WAV-2496ED)
+
+</div>
+
+> **Project status:** MVP implemented on the [draft PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1), not merged into `main`. [GitHub Actions PR run](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42485463114) passed with 37/37 pytest cases, 20/20 deterministic scripted evaluations, Docker WAV synthesis and quality checks. **Codex review has not been requested.** Real Whisper STT and remote LLM were not provider-validated.
+
+## Overview
 
 An intentionally compact voice agent showcasing Python, FastAPI, validated audio uploads, real local speech recognition through whisper.cpp, an opt-in LLM adapter with constrained tool calling, real speech synthesis, and an accessible browser interface. Designed as a **turn-based** demonstrator, not a production voice SaaS.
 
@@ -20,6 +60,12 @@ An intentionally compact voice agent showcasing Python, FastAPI, validated audio
 - One-request-at-a-time session processing, cancellation, duplicate request protection, expiring in-memory sessions and bounded conversation history.
 - OpenAPI, health endpoint, stage timings, deterministic tests and 20 offline routing evaluation cases, Docker and GitHub Actions.
 - Documentation in English, Brazilian Portuguese and Spanish.
+
+## Technology stack
+
+Python **3.14** is used by Docker and CI; CI also tests **3.12** (`requires-python >=3.12`). The dependency declarations are **ranges**, not pinned installs: FastAPI `>=0.115,<1`, Uvicorn `>=0.32,<1`, Pydantic `>=2.10,<3`, Pydantic Settings `>=2.6,<3`, httpx `>=0.28,<1` and python-multipart `>=0.0.20,<1`. The browser UI is native HTML/JavaScript with MediaRecorder and SpeechSynthesis. Docker installs FFmpeg and eSpeak-NG. Development tools: pytest, pytest-asyncio, Ruff, mypy, Python packaging and GitHub Actions.
+
+**AI capability boundaries:** scripted STT and rule routing are the default; whisper.cpp is a **real STT adapter not exercised with a downloaded model in CI**; an HTTPS OpenAI-compatible LLM is opt-in and **not provider-tested**; the eSpeak WAV output **was verified** in a live Docker smoke test. The five local tools really execute under Pydantic validation. No database, Redis, Docker Compose, authentication, public deployment, RAG or MCP is implemented.
 
 ## Architecture and pipeline
 
@@ -48,6 +94,18 @@ An intentionally compact voice agent showcasing Python, FastAPI, validated audio
 The typed-input route intentionally bypasses STT and labels the input as **typed**. In demo mode, uploaded audio is decoded and validated, but speech recognition is **not** performed: the scripted STT returns a fixed example question in the selected language, with `simulated: true`. This avoids representing dummy output as real recognition.
 
 Source layout: `main.py` (FastAPI), `audio.py` (validation), `providers.py` (STT / LLM / TTS), `tools.py` (Pydantic allowlist), `pipeline.py` (orchestration), `sessions.py` (ephemeral state), `static/index.html` (web UI).
+
+## Project structure
+
+| Path | Responsibility |
+|---|---|
+| `src/voice_ai_agent/main.py` | FastAPI, routes, health, OpenAPI and static app |
+| `audio.py`, `providers.py` | Audio validation, ffmpeg, STT/LLM/TTS adapters |
+| `pipeline.py`, `sessions.py` | Turn orchestration, cancellation and bounded state |
+| `tools.py`, `schemas.py`, `config.py` | Allowlisted actions, Pydantic contracts and settings |
+| `static/index.html`, `prompts/system_v1.txt` | Browser UI and versioned LLM instructions |
+| `tests/`, `evaluations/` | Synthetic audio tests and scripted evaluation suite |
+| `.github/workflows/ci.yml`, `Dockerfile` | GitHub Actions and container smoke test |
 
 ## Requirements and install
 
@@ -102,6 +160,20 @@ VOICE_TTS_BACKEND=espeak
 That mode performs **real local STT and TTS**, but the conversation policy is still explicitly **scripted rules**, not a generative model. Whisper model requirements, licensing, language availability and performance depend on the chosen build and model. Downloads are not part of CI. `en` and `pt` are target languages; `es` is available as a configurable best-effort selection.
 
 For **actual LLM generation**, explicitly switch to `VOICE_MODE=remote`, retain `whisper_cpp`, configure `VOICE_LLM_BACKEND=openai_compatible` and set HTTPS `VOICE_LLM_ENDPOINT`, model and key. This can transmit text to a third party **and may incur charges**; do not enable without your own provider authorization. Tool arguments are validated and only one call is executed per turn. In particular, **tools never receive arbitrary file paths, shell commands or model-selected HTTP URLs**.
+
+## API reference
+
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/` | Browser demo interface |
+| `GET` | `/health` | Service health |
+| `GET` | `/docs`, `/openapi.json` | Interactive and machine-readable OpenAPI |
+| `GET` | `/api/config` | Current provider mode and its demo disclaimer |
+| `POST` | `/api/session` | Create a temporary session |
+| `POST` | `/api/turn` | Audio upload, STT and response pipeline |
+| `POST` | `/api/turn/text` | Typed input; does not exercise STT |
+| `GET` | `/api/history/{session_id}` | Bounded conversation history |
+| `POST` | `/api/cancel/{request_id}` | Attempt to cancel a turn, with session_id query |
 
 ## API examples
 
@@ -160,11 +232,21 @@ python -m build
 
 GitHub Actions uses standard GitHub-hosted Ubuntu runners, Python 3.12/3.14, ffmpeg, package checks, simulated integration tests, offline evals and a Docker build. It does not depend on a personal runner or microphone and never invokes Codex, a remote paid model or a deployment.
 
+## Badge evidence and maintenance
+
+The `pytest | 37 passing` badge is a **static snapshot** of [GitHub Actions PR run #42485463114](https://github.com/RamonRDR/voice-ai-agent/actions/runs/42485463114) on `feat/voice-ai-agent-mvp`: **37 passed, 0 failed, 0 skipped, 1 non-blocking third-party deprecation warning** in each Python version. The separate **20/20** badge refers only to the deterministic scripted evaluation in the same run; it is not a speech accuracy score or LLM benchmark. Ruff lint and formatting, mypy, JS syntax, wheel/sdist build, Docker build and actual eSpeak WAV smoke test all passed. No coverage percentage is claimed.
+
+The CI image badge follows the **feature branch** because `main` still contains only the initial files. On an authorized merge, change its branch selection to `main` in **all three READMEs**, then verify CI on main. After any test additions, removals, parametrizations or skips, read the latest successful **Pytest** and **Deterministic evaluation** jobs on the relevant branch, update the static badge counts in all three languages through a reviewed PR, and update [badge inventory and evidence](docs/BADGES.md). Badges must never be refreshed from a failed or partial test run.
+
 ## Known limitations / evolution
 
 Turn-based requests only; no full-duplex streaming, WebSockets or real-time speech interruption. The scripted demo is not speech recognition or a generative LLM. Local whisper.cpp requires separately installed executable/model. eSpeak voices are synthetic and may sound robotic. Browser recording/container audio codec support varies. Sessions are in-memory single-instance only, and cancellation is best-effort between awaited stages. External integrations, persistent storage, public deployment and voice cloning are intentionally out of scope.
 
 Next steps: document a real Whisper integration run in a suitable local machine, optionally add opt-in realistic STT/TTS benchmarks, and only later investigate VAD/streaming and authenticated deployment.
+
+## Contributing
+
+Contributions and issue reports are welcome through a reviewed pull request. Do not commit recordings, provider credentials or large model weights. Keep scripted and real-provider behavior explicitly distinguished, add deterministic tests for changes, and preserve the approval-only merge policy described in [PR #1](https://github.com/RamonRDR/voice-ai-agent/pull/1).
 
 ## License
 
