@@ -44,15 +44,18 @@ class VoicePipeline:
             raise VoiceError("Provide audio or text, not both")
         if language not in ("en", "pt", "es"):
             raise VoiceError("Unsupported language")
-        session_id, _ = await self.store.get(session_id)
+        session_id, _ = await self.store.get(session_id, pin=True)
         request_id = request_id or str(uuid.uuid4())
         try:
             uuid.UUID(request_id)
         except ValueError as exc:
+            await self.store.release(session_id)
             raise VoiceError("Invalid request ID") from exc
         if request_id in self.running or request_id in self.completed:
+            await self.store.release(session_id)
             raise VoiceError("Duplicate request ID", 409)
         if session_id in self.busy_sessions:
+            await self.store.release(session_id)
             raise VoiceError("Another turn is processing in this session", 409)
         self.busy_sessions.add(session_id)
         task = asyncio.current_task()
@@ -141,6 +144,7 @@ class VoicePipeline:
             self.completed.add(request_id)
             if len(self.completed) > 1000:
                 self.completed.clear()
+            await self.store.release(session_id)
 
     async def cancel(self, request_id: str, session_id: str) -> bool:
         item = self.running.get(request_id)

@@ -94,3 +94,22 @@ def test_provider_config_requires_explicit_opt_in() -> None:
             llm_api_key="x",
             llm_model="fake",
         )
+
+
+def test_example_dotenv_enables_default_demo() -> None:
+    from pathlib import Path
+
+    from fastapi.testclient import TestClient
+
+    from voice_ai_agent.config import Settings
+    from voice_ai_agent.main import create_app
+
+    example = Path(__file__).resolve().parents[1] / ".env.example"
+    settings = Settings(_env_file=example)
+    assert settings.mode == "demo"
+    assert settings.llm_endpoint is None
+    assert settings.llm_api_key is None
+    assert settings.llm_model is None
+    with TestClient(create_app(settings)) as client:
+        assert client.get("/health").status_code == 200
+        assert client.get("/api/config").json()["stt"] == "demo"

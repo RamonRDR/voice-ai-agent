@@ -116,11 +116,12 @@ class RulesLLM:
     async def respond(self, text: str, history: list[Message]) -> ModelOutput:
         message = text.strip()
         lower = message.casefold()
-        if any(w in lower for w in ("what time", "current time", "que horas", "qué hora")):
-            return ModelOutput(tool_name="get_current_time", tool_args={})
+        # An explicit command must take precedence over words inside its payload.
         note = re.match(r"^(?:note|save note|anote|anotar|nota|apunta)\s*:\s*(.+)$", message, re.I)
         if note:
             return ModelOutput(tool_name="create_note", tool_args={"text": note.group(1)[:250]})
+        if any(w in lower for w in ("what time", "current time", "que horas", "qué hora")):
+            return ModelOutput(tool_name="get_current_time", tool_args={})
         if any(w in lower for w in ("list notes", "show notes", "listar notas", "ver notas")):
             return ModelOutput(tool_name="list_notes", tool_args={})
         if any(w in lower for w in ("session summary", "resumo da sessão", "resumen")):
@@ -170,15 +171,34 @@ class OpenAICompatibleLLM:
                 )
                 response.raise_for_status()
                 data = response.json()
-            msg = data["choices"][0]["message"]
-            calls = msg.get("tool_calls") or []
+            # Provider JSON is untrusted; validate nested shapes before accessing fields.
+            if not isinstance(data, dict):
+                raise ValueError("Invalid provider response")
+            choices = data.get("choices")
+            if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+                raise ValueError("Invalid provider choices")
+            msg = choices[0].get("message")
+            if not isinstance(msg, dict):
+                raise ValueError("Invalid provider message")
+            calls = msg.get("tool_calls")
+            if calls is not None and not isinstance(calls, list):
+                raise ValueError("Invalid tool calls")
             if calls:
                 # One allowlisted tool call at most. Never execute arbitrary names or code.
-                fn = calls[0]["function"]
-                args = json.loads(fn.get("arguments") or "{}")
+                call = calls[0]
+                if not isinstance(call, dict):
+                    raise ValueError("Invalid tool call")
+                fn = call.get("function")
+                if not isinstance(fn, dict):
+                    raise ValueError("Invalid function call")
+                name = fn.get("name")
+                raw_args = fn.get("arguments") or "{}"
+                if not isinstance(name, str) or not name.strip() or not isinstance(raw_args, str):
+                    raise ValueError("Invalid function name or arguments")
+                args = json.loads(raw_args)
                 if not isinstance(args, dict):
                     raise ValueError("Arguments must be an object")
-                return ModelOutput(tool_name=str(fn["name"]), tool_args=args)
+                return ModelOutput(tool_name=name, tool_args=args)
             content = msg.get("content")
             if not isinstance(content, str) or not content.strip():
                 raise ValueError("Empty LLM response")

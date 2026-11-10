@@ -87,3 +87,61 @@ async def test_parallel_turns_are_rejected() -> None:
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
+
+
+async def test_active_session_survives_ttl_cleanup_mid_turn() -> None:
+    import time
+
+    pipeline = VoicePipeline(Settings(_env_file=None, session_ttl_seconds=60))
+    sid, session = await pipeline.store.get(None)
+    entered = asyncio.Event()
+    resume = asyncio.Event()
+
+    class SlowLLM:
+        async def respond(self, text, history):
+            entered.set()
+            await resume.wait()
+            return ModelOutput(content="Completed safely")
+
+    pipeline.llm = SlowLLM()
+    task = asyncio.create_task(pipeline.process(sid, None, "en", text="hello"))
+    await asyncio.wait_for(entered.wait(), timeout=2)
+    assert session.active_turns == 1
+    session.touched = time.monotonic() - 120
+    await pipeline.store.get(None)  # A different client triggers global TTL cleanup.
+    assert sid in pipeline.store._sessions
+    resume.set()
+    result = await asyncio.wait_for(task, timeout=2)
+    assert result.response == "Completed safely"
+    assert len(await pipeline.store.history(sid)) == 2
+    assert session.active_turns == 0
+    assert time.monotonic() - session.touched < 60
+
+    session.touched = time.monotonic() - 120
+    await pipeline.store.get(None)
+    with pytest.raises(VoiceError, match="expired"):
+        await pipeline.store.get(sid)
+
+
+async def test_rejected_concurrent_turn_does_not_unpin_running_turn() -> None:
+    pipeline = VoicePipeline(Settings(_env_file=None))
+    sid, session = await pipeline.store.get(None)
+    entered = asyncio.Event()
+    resume = asyncio.Event()
+
+    class SlowLLM:
+        async def respond(self, text, history):
+            entered.set()
+            await resume.wait()
+            return ModelOutput(content="Done")
+
+    pipeline.llm = SlowLLM()
+    task = asyncio.create_task(pipeline.process(sid, None, "en", text="first"))
+    await asyncio.wait_for(entered.wait(), timeout=2)
+    with pytest.raises(VoiceError, match="Another turn"):
+        await pipeline.process(sid, None, "en", text="second")
+    assert session.active_turns == 1
+    resume.set()
+    await task
+    assert session.active_turns == 0
+    assert not pipeline.busy_sessions

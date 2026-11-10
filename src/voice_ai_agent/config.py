@@ -8,7 +8,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="VOICE_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="VOICE_", env_file=".env", env_ignore_empty=True, extra="ignore"
+    )
 
     mode: Literal["demo", "local", "remote"] = "demo"
     stt_backend: Literal["demo", "whisper_cpp"] = "demo"
