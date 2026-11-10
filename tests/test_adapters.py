@@ -1,9 +1,9 @@
 """Fault-injection tests for stage-level failures without external services."""
 
 from io import BytesIO
+from pathlib import Path
 
 import httpx
-from pathlib import Path
 
 import pytest
 from conftest import make_wav
