@@ -86,12 +86,20 @@
 "use strict";
 const el = id => document.getElementById(id);
 let session = null, request = null, controller = null, recorder = null;
-let stream = null, chunks = [], latest = null, latestLanguage = "en";
-const setStatus = (message, error=false) => { el("status").textContent=message; el("status").classList.toggle("error",error); };
-const busy = active => {
-  el("send").disabled=active; el("send-file").disabled=active; el("record").disabled=active;
-  el("cancel").disabled=!active; el("clear").disabled=active;
+let stream = null, latest = null, latestLanguage = "en", phase = "initializing";
+const setStatus = (message, error=false) => {
+  el("status").textContent=message;
+  el("status").classList.toggle("error",error);
 };
+function setPhase(next) {
+  phase=next;
+  const idle=next==="idle";
+  for (const id of ["send","send-file","record","clear","upload","typed","language"]) {
+    el(id).disabled=!idle;
+  }
+  el("stop").disabled=next!=="recording";
+  el("cancel").disabled=next!=="processing";
+}
 function showMessage(who, content) {
   const container=el("conversation");
   if (container.querySelector(".hint")) container.replaceChildren();
@@ -102,28 +110,47 @@ function showMessage(who, content) {
   message.append(name,p); container.append(message); container.scrollTop=container.scrollHeight;
 }
 async function freshSession() {
-  const response=await fetch("/api/session",{method:"POST"});
-  if (!response.ok) throw Error("Could not start a session");
-  session=(await response.json()).session_id;
-  el("conversation").replaceChildren();
-  el("metrics").textContent=""; el("tool").textContent="";
-  el("player").hidden=true; el("play").disabled=true; latest=null;
-  setStatus("New private in-memory session created.");
+  if (phase!=="idle" && phase!=="initializing") return;
+  setPhase("starting-session");
+  try {
+    const response=await fetch("/api/session",{method:"POST"});
+    if (!response.ok) throw Error("Could not start a session");
+    session=(await response.json()).session_id;
+    el("conversation").replaceChildren();
+    el("metrics").textContent=""; el("tool").textContent="";
+    el("player").hidden=true; el("play").disabled=true; latest=null;
+    setStatus("New private in-memory session created.");
+  } finally {
+    if (phase!=="closed") setPhase("idle");
+  }
 }
 async function initialize() {
+  setPhase("initializing");
   try {
-    const config=await (await fetch("/api/config")).json();
+    const response=await fetch("/api/config");
+    if (!response.ok) throw Error("Configuration unavailable");
+    const config=await response.json();
     el("mode").textContent=config.mode.toUpperCase()+" · STT "+config.stt+" · LLM "+config.llm;
     el("disclaimer").textContent=config.disclaimer +
       (config.tts==="browser" ? " Audio output uses your browser's speech synthesis when you click Play." : " Audio output uses local eSpeak.");
     await freshSession();
-  } catch (_error) { setStatus("Cannot connect to local API.",true); }
+  } catch (_error) {
+    if (phase!=="closed") setPhase("idle");
+    setStatus("Cannot connect to local API.",true);
+  }
 }
 async function submit({blob, text}) {
-  if (!session) { setStatus("Session unavailable; reload the page.",true); return; }
-  request=crypto.randomUUID(); controller=new AbortController(); busy(true);
-  el("play").disabled=true; const language=el("language").value;
-  latestLanguage=language;
+  // Only one user action may own the microphone or the current HTTP turn.
+  if (phase!=="idle" && phase!=="stopping") return;
+  if (!session) {
+    if (phase==="stopping") setPhase("idle");
+    setStatus("Session unavailable; reload the page.",true);
+    return;
+  }
+  const id=crypto.randomUUID(), aborter=new AbortController();
+  request=id; controller=aborter; setPhase("processing");
+  el("play").disabled=true;
+  const language=el("language").value; latestLanguage=language;
   setStatus(blob ? "Validating audio → transcribing → processing…" : "Processing text and tools…");
   try {
     let response;
@@ -132,56 +159,112 @@ async function submit({blob, text}) {
       form.append("audio",blob,"recording."+(
         blob.type.includes("ogg")?"ogg":blob.type.includes("wav")?"wav":"webm"
       ));
-      form.append("session_id",session); form.append("request_id",request);
+      form.append("session_id",session); form.append("request_id",id);
       form.append("language",language);
-      response=await fetch("/api/turn",{method:"POST",body:form,signal:controller.signal});
+      response=await fetch("/api/turn",{method:"POST",body:form,signal:aborter.signal});
     } else {
       response=await fetch("/api/turn/text",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({text,session_id:session,request_id:request,language}),
-        signal:controller.signal
+        body:JSON.stringify({text,session_id:session,request_id:id,language}),
+        signal:aborter.signal
       });
     }
     const result=await response.json();
     if (!response.ok) throw Error(typeof result.detail==="string" ? result.detail : "Request failed");
     showMessage("user",result.transcript.text + (result.transcript.simulated?" [scripted STT demo]":""));
     showMessage("assistant",result.response);
-    latest=result;
-    el("play").disabled=false;
+    latest=result; el("play").disabled=false;
     el("tool").textContent=result.tool ? "Tool executed: "+result.tool.name+" (real local operation)" : "No tool called.";
     const m=result.metrics;
     el("metrics").textContent="STT "+m.stt_ms+" ms · Logic "+m.llm_ms+
       " ms · Tools "+m.tools_ms+" ms · TTS "+m.tts_ms+" ms · Total "+m.total_ms+" ms";
-    setStatus(result.tts_error || "Completed. Select Play for speech output.", Boolean(result.tts_error));
+    setStatus(result.tts_error || "Completed. Select Play for speech output.",Boolean(result.tts_error));
   } catch (error) {
     setStatus(error.name==="AbortError"?"Request cancelled.":error.message,true);
-  } finally { request=null; controller=null; busy(false); }
+  } finally {
+    if (request===id) {
+      request=null; controller=null;
+      if (phase!=="closed") setPhase("idle");
+    }
+  }
 }
-el("send").onclick=()=>{ const text=el("typed").value.trim(); if(!text) return setStatus("Enter text first.",true); submit({text}); };
-el("send-file").onclick=()=>{ const blob=el("upload").files[0]; if(!blob) return setStatus("Choose an audio file first.",true); submit({blob}); };
-el("record").onclick=async()=>{
-  try {
-    if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw Error("Microphone recording unsupported or requires localhost/HTTPS.");
-    stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    chunks=[];
-    const mime=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t));
-    recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
-    recorder.ondataavailable=e=>{if(e.data.size) chunks.push(e.data);};
-    recorder.onstop=()=>{
-      const blob=new Blob(chunks,{type:recorder.mimeType || "audio/webm"});
-      stream.getTracks().forEach(t=>t.stop()); stream=null;
-      el("stop").disabled=true;
-      if (blob.size) submit({blob}); else setStatus("No recording captured.",true);
-    };
-    recorder.start(); el("record").disabled=true; el("stop").disabled=false; setStatus("Recording. Press Stop when finished.");
-  } catch(error) { if(stream) stream.getTracks().forEach(t=>t.stop()); setStatus(error.message,true); }
+el("send").onclick=()=>{
+  if (phase!=="idle") return;
+  const text=el("typed").value.trim();
+  if (!text) return setStatus("Enter text first.",true);
+  submit({text});
 };
-el("stop").onclick=()=>{if(recorder?.state==="recording") recorder.stop();};
+el("send-file").onclick=()=>{
+  if (phase!=="idle") return;
+  const blob=el("upload").files[0];
+  if (!blob) return setStatus("Choose an audio file first.",true);
+  submit({blob});
+};
+el("record").onclick=async()=>{
+  if (phase!=="idle") return;
+  if (!session) return setStatus("Session unavailable; reload the page.",true);
+  setPhase("acquiring");
+  let acquired=null;
+  try {
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      throw Error("Microphone recording unsupported or requires localhost/HTTPS.");
+    }
+    acquired=await navigator.mediaDevices.getUserMedia({audio:true});
+    if (phase!=="acquiring") {
+      acquired.getTracks().forEach(track=>track.stop());
+      return;
+    }
+    const chunks=[];
+    const mime=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/webm"].find(t=>MediaRecorder.isTypeSupported(t));
+    const current=new MediaRecorder(acquired,mime?{mimeType:mime}:undefined);
+    current.ondataavailable=event=>{if(event.data.size) chunks.push(event.data);};
+    current.onstop=()=>{
+      acquired.getTracks().forEach(track=>track.stop());
+      if (stream===acquired) stream=null;
+      if (recorder===current) recorder=null;
+      if (phase!=="stopping") {
+        if (phase!=="closed") setPhase("idle");
+        return;
+      }
+      const blob=new Blob(chunks,{type:current.mimeType || "audio/webm"});
+      if (blob.size) submit({blob});
+      else {setPhase("idle"); setStatus("No recording captured.",true);}
+    };
+    current.onerror=()=>{
+      acquired.getTracks().forEach(track=>track.stop());
+      if (stream===acquired) stream=null;
+      if (recorder===current) recorder=null;
+      if (phase!=="closed") {setPhase("idle"); setStatus("Recording failed.",true);}
+    };
+    stream=acquired; recorder=current;
+    current.start();
+    setPhase("recording");
+    setStatus("Recording. Press Stop when finished.");
+  } catch(error) {
+    if (acquired) acquired.getTracks().forEach(track=>track.stop());
+    if (stream===acquired) stream=null;
+    recorder=null;
+    if (phase!=="closed") {setPhase("idle"); setStatus(error.message,true);}
+  }
+};
+el("stop").onclick=()=>{
+  if (phase!=="recording" || recorder?.state!=="recording") return;
+  setPhase("stopping");
+  try { recorder.stop(); }
+  catch(error) {
+    if (stream) stream.getTracks().forEach(track=>track.stop());
+    stream=null; recorder=null;
+    setPhase("idle"); setStatus(error.message,true);
+  }
+};
 el("cancel").onclick=async()=>{
-  if(!request) return; const id=request;
-  try { await fetch("/api/cancel/"+encodeURIComponent(id)+"?session_id="+encodeURIComponent(session),{method:"POST"}); }
-  catch(_error) { /* Abort locally even if server is unreachable. */ }
-  controller?.abort(); setStatus("Cancellation requested.");
+  if (phase!=="processing" || !request) return;
+  const id=request;
+  try {
+    await fetch("/api/cancel/"+encodeURIComponent(id)+"?session_id="+encodeURIComponent(session),{method:"POST"});
+  } catch (_error) { /* Abort locally even if server is unreachable. */ }
+  controller?.abort();
+  setStatus("Cancellation requested.");
 };
 el("play").onclick=()=>{
   if(!latest) return;
@@ -197,7 +280,12 @@ el("play").onclick=()=>{
   } else { setStatus("Browser text-to-speech unavailable.",true); }
 };
 el("clear").onclick=()=>freshSession().catch(()=>setStatus("Could not create session.",true));
-window.addEventListener("pagehide",()=>{ if(stream)stream.getTracks().forEach(t=>t.stop()); if("speechSynthesis" in window)speechSynthesis.cancel();});
+window.addEventListener("pagehide",()=>{
+  setPhase("closed");
+  if (stream) stream.getTracks().forEach(track=>track.stop());
+  controller?.abort();
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+});
 initialize();
 </script>
 </body>

@@ -50,6 +50,8 @@ jobs:
           Path("/tmp/voice-agent.js").write_text(script)
           PY
           node --check /tmp/voice-agent.js
+      - name: Test browser state and microphone cleanup
+        run: node --test tests/browser_state.test.cjs
       - name: Build wheel and source distribution
         run: python -m build
 
